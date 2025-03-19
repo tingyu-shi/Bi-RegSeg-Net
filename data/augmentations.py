@@ -74,8 +74,8 @@ class RandomCrop(object):
         self.prob      = prob
 
     def __call__(self, sample):
-        assert 'rgb' in sample.keys()
-        image = sample['rgb']
+        assert 'vis' in sample.keys()
+        image = sample['vis']
         h, w= image.shape[1:]
         i = np.random.randint(0, h * self.crop_rate)
         j = np.random.randint(0, w * self.crop_rate)

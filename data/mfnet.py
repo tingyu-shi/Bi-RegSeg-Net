@@ -110,7 +110,7 @@ class MFNet_Dataset(data.Dataset):
 
 
         sample = {
-            'vi': vis,
+            'vis': vis,
             'ir': ir,
             'ir_pseudo': ir_pseudo,
             'ir_affine_deform': ir_affine_deform,
