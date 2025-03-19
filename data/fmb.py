@@ -113,13 +113,13 @@ class FMB_Dataset(data.Dataset):
             'label': label
         }
 
-        if self.mode == 'train' and self.do_aug:
-            sample = self.aug(sample)
-
         sample['vis'] = self.im_to_tensor(sample['vi'])  # [b, c, h, w]
         sample['ir'] = self.the_to_tensor(sample['ir'])  # [b, c, h, w]
         sample['ir_affine_deform'] = self.the_to_tensor(sample['ir_affine_deform'])  # [b, c, h, w]
         sample['label'] = torch.from_numpy(np.asarray(sample['label'], dtype=np.int64)).long()  # [b, h, w]
+
+        if self.mode == 'train' and self.do_aug:
+            sample = self.aug(sample)
 
         return image_name, sample
 
