@@ -273,9 +273,9 @@ class MambaDecoder(nn.Module):
     def up_x4(self, x, pz):
         B, H, W, C = x.shape
 
-        x = self.up(x)
-        x = x.view(B, pz * H, pz * W, -1)
+        x = self.up(x) # B, 4H, 4W, C
+        x = x.view(B, pz * H, pz * W, -1)  # B, 4H, 4W, C（实际是冗余操作）
         x = x.permute(0, 3, 1, 2).contiguous()  # B, C, 4H, 4W
-        x = self.output(x)
+        x = self.output(x) # B, Class, 4H, 4W
 
         return x
