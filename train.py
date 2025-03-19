@@ -112,8 +112,8 @@ def train(args):
             sample = sample[1]
             vis = sample['vis'].to(device)
             ir = sample['ir'].to(device)
-            ir_affine_deform = sample['ir_affine_deform'].to(device)
             ir_pseudo = sample['ir_pseudo'].to(device)
+            ir_affine_deform = sample['ir_affine_deform'].to(device)
             label = sample['label'].to(device)
             warped_moving_ir, unwarped_fixed_ir, flow = model(ir_affine_deform, ir_pseudo, vis)
 

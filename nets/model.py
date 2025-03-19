@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from einops import rearrange
 import torch.nn.functional as F
 
 try:
@@ -63,6 +64,27 @@ class RegBlock(nn.Module):
         flow = self.Conv5(cost_vol)
 
         return flow
+
+
+class FinalPatchExpand_X4(nn.Module):
+    def __init__(self, dim, patch_size=4, norm_layer=nn.LayerNorm):
+        super().__init__()
+        self.dim = dim
+        self.patch_size = patch_size
+        self.expand = nn.Linear(dim, patch_size * patch_size * dim, bias=False)
+        self.output_dim = dim
+        self.norm = norm_layer(self.output_dim)
+
+    def forward(self, x):
+        """
+        x: B, H, W, C
+        """
+        x = self.expand(x)  # B, H, W, 16C
+        B, H, W, C = x.shape
+        x = rearrange(x, 'b h w (p1 p2 c)-> b (h p1) (w p2) c', p1=self.patch_size, p2=self.patch_size,
+                      c=C // (self.patch_size ** 2))
+        x = self.norm(x)
+        return x
 
 
 class FinalUpsample_X4(nn.Module):

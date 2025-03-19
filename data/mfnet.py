@@ -103,6 +103,8 @@ class MFNet_Dataset(data.Dataset):
         label = Image.open(os.path.join(self.root, 'pad', 'label', image_name + '.png'))
         ir = Image.open(os.path.join(self.root, 'pad', 'ir', image_name + '.png'))
         ir = ir.convert('RGB')
+        ir_pseudo = Image.open(os.path.join(self.root, 'pad', 'ir_pseudo', image_name + '.png'))
+        ir_pseudo = ir_pseudo.convert('RGB')
         ir_affine_deform = Image.open(os.path.join(self.root, 'pad', 'ir_affine_deform', image_name + '.png'))
         ir_affine_deform = ir_affine_deform.convert('RGB')
 
@@ -110,6 +112,7 @@ class MFNet_Dataset(data.Dataset):
         sample = {
             'vi': vis,
             'ir': ir,
+            'ir_pseudo': ir_pseudo,
             'ir_affine_deform': ir_affine_deform,
             'label': label
         }
@@ -119,6 +122,7 @@ class MFNet_Dataset(data.Dataset):
 
         sample['vis'] = self.im_to_tensor(sample['vis'])  # [b, c, h, w]
         sample['ir'] = self.the_to_tensor(sample['ir'])  # [b, c, h, w]
+        sample['ir_pseudo'] = self.the_to_tensor(sample['ir_pseudo'])  # [b, c, h, w]
         sample['ir_affine_deform'] = self.the_to_tensor(sample['ir_affine_deform'])  # [b, c, h, w]
         sample['label'] = torch.from_numpy(np.asarray(sample['label'], dtype=np.int64)).long()  # [b, h, w]
 
