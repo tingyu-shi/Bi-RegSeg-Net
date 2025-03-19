@@ -109,6 +109,7 @@ class FinalUpsample_X4(nn.Module):
         x = self.norm(x)
         return x
 
+
 class RegSeg(nn.Module):
     def __init__(self, cfg=None):
         super().__init__()
@@ -150,7 +151,8 @@ class RegSeg(nn.Module):
         for i in range(2, 6):
             self.transformer.append(SpatialTransformer([s // 2**i for s in [cfg["height"], cfg["width"]]]))
         self.up_x2 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
-        self.up_final = FinalUpsample_X4(dim=self.channels[0])
+        # self.up_final = FinalUpsample_X4(dim=self.channels[0])
+        # self.up_final = FinalPatchExpand_X4(dim=self.channels[0])
 
     def forward(self, x, y, vis):
         """
@@ -164,31 +166,57 @@ class RegSeg(nn.Module):
         fx1, fx2, fx3, fx4 = self.backbone(x)
         fy1, fy2, fy3, fy4 = self.backbone(y)
 
+
         # range a
+        B, C, H, W = fx4.shape
+        fx4 = fx4.view(B, -1, 4 * H, 4 * W)
+        fy4 = fy4.view(B, -1, 4 * H, 4 * W)
         wx4 = fx4
         flow = self.reg_block[3](wx4, fy4)
         flowall = flow
+        # warped_x4 = self.transformer[0](fx4, flowall)
+        # rewarped_y4 = self.transformer[0](fy4, -flowall)
+        # fx4 = fx4.view(B, -1, H // 4, W // 4)
+        # fy4 = fy4.view(B, -1, H // 4, W // 4)
 
         # range b
+        B, C, H, W = fx3.shape
+        fx3 = fx3.view(B, -1, 4 * H, 4 * W)
+        fy3 = fy3.view(B, -1, 4 * H, 4 * W)
         flowall = self.up_x2(2 * flowall)
-        wx3 = self.transformer[2](fx3, flowall)
-        flow = self.reg_block[2](wx3, fy3)
+        wx3 = self.transformer[2](fx3.view(B, -1, 4 * H, 4 * W), flowall)
+        flow = self.reg_block[2](wx3, fy3.view(B, -1, 4 * H, 4 * W))
         flowall = self.transformer[2](flowall, flow) + flow
+        # warped_x3 = self.transformer[0](fx3, flowall)
+        # rewarped_y3 = self.transformer[0](fy3, -flowall)
+        # fx3 = fx3.view(B, -1, H // 4, W // 4)
+        # fy3 = fy3.view(B, -1, H // 4, W // 4)
 
         # range c
+        B, C, H, W = fx2.shape
+        fx2 = fx2.view(B, -1, 4 * H, 4 * W)
+        fy2 = fy2.view(B, -1, 4 * H, 4 * W)
         flowall = self.up_x2(2 * flowall)
-        wx2 = self.transformer[1](fx2, flowall)
-        flow = self.reg_block[1](wx2, fy2)
+        wx2 = self.transformer[1](fx2.view(B, -1, 4 * H, 4 * W), flowall)
+        flow = self.reg_block[1](wx2, fy2.view(B, -1, 4 * H, 4 * W))
         flowall = self.transformer[1](flowall, flow) + flow
+        # warped_x2 = self.transformer[0](fx2, flowall)
+        # rewarped_y2 = self.transformer[0](fy2, -flowall)
+        # fx2 = fx2.view(B, -1, H // 4, W // 4)
+        # fy2 = fy2.view(B, -1, H // 4, W // 4)
 
         # range d
+        B, C, H, W = fx1.shape
+        fx1 = fx1.view(B, -1, 4 * H, 4 * W)
+        fy1 = fy1.view(B, -1, 4 * H, 4 * W)
         flowall = self.up_x2(2 * flowall)
-        wx1 = self.transformer[0](fx1, flowall)
-        flow = self.reg_block[0](wx1, fy1)
+        wx1 = self.transformer[0](fx1.view(B, -1, 4 * H, 4 * W), flowall)
+        flow = self.reg_block[0](wx1, fy1.view(B, -1, 4 * H, 4 * W))
         flowall = self.transformer[0](flowall, flow) + flow
-
-        # Final Upsample X4
-        flowall = self.up_final(flowall)
+        # warped_x1 = self.transformer[0](fx1, flowall)
+        # rewarped_y1 = self.transformer[0](fy1, -flowall)
+        # fx1 = fx1.view(B, -1, H // 4, W // 4)
+        # fy1 = fy1.view(B, -1, H // 4, W // 4)
 
         warped_x = self.transformer[0](x, flowall)
         rewarped_y = self.transformer[0](y, -flowall)
