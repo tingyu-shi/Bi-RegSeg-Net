@@ -163,7 +163,7 @@ class RegSeg(nn.Module):
            Parameters:
                x: moving_images, [batch_size, channel=3, H=576, W=768]
                y: fixed_images, [batch_size, channel=3, H=576, W=768]
-               vi: visible_images, [batch_size, channel=3, H=576, W=768]
+               vis: visible_images, [batch_size, channel=3, H=576, W=768]
         """
         fx1, fx2, fx3, fx4 = self.backbone(x)
         fy1, fy2, fy3, fy4 = self.backbone(y)
@@ -253,9 +253,9 @@ if __name__ == '__main__':
         cfg = json.load(fp)
     assert cfg is not None
     num_minibatch = 1
-    ir_affine_deform = torch.randn(num_minibatch, 3, 576, 768).cuda()
-    ir_pseudo = torch.randn(num_minibatch, 3, 576, 768).cuda()
-    vi = torch.randn(num_minibatch, 3, 576, 768).cuda()
+    ir_affine_deform = torch.randn(num_minibatch, 1, 576, 768).cuda().expand(-1, 3, -1, -1)
+    ir_pseudo = torch.randn(num_minibatch, 1, 576, 768).cuda().expand(-1, 3, -1, -1)
+    vis = torch.randn(num_minibatch, 3, 576, 768).cuda()
     model = RegSeg(cfg).cuda(0)
-    warped_moving_ir, rewarped_fixed_ir_pseudo, flow = model(ir_affine_deform, ir_pseudo, vi)
+    warped_moving_ir, rewarped_fixed_ir_pseudo, flow = model(ir_affine_deform, ir_pseudo, vis)
     print('end')
