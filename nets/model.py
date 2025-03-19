@@ -111,7 +111,7 @@ class FinalUpsample_X4(nn.Module):
         return x
 
 
-class RegSeg(nn.Module):
+class Reg(nn.Module):
     def __init__(self, cfg=None):
         super().__init__()
         if cfg['backbone'] == 'vmamba_tiny':
@@ -246,6 +246,10 @@ class RegSeg(nn.Module):
     #         out = self.encode_decode(rgb, modal_x)
     #     return out
 
+class RegSeg(nn.Module):
+    def __init__(self, cfg=None):
+        super().__init__()
+
 if __name__ == '__main__':
     import json
     cfg = None
@@ -256,6 +260,6 @@ if __name__ == '__main__':
     ir_affine_deform = torch.randn(num_minibatch, 1, 576, 768).cuda().expand(-1, 3, -1, -1)
     ir_pseudo = torch.randn(num_minibatch, 1, 576, 768).cuda().expand(-1, 3, -1, -1)
     vis = torch.randn(num_minibatch, 3, 576, 768).cuda()
-    model = RegSeg(cfg).cuda(0)
+    model = Reg(cfg).cuda(0)
     warped_moving_ir, rewarped_fixed_ir_pseudo, flow = model(ir_affine_deform, ir_pseudo, vis)
     print('end')

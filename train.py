@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader
 from losses.losses import LovaszSoftmax, LossFunction_Dense
 from losses.soft_ce_loss import SoftCrossEntropyLoss
 from metrics import averageMeter, runningScore, MSE, NCC, MI, PCK
-from nets.model import RegSeg
+from nets.model import Reg
 from utils import get_train_val_dataset, save_ckpt, get_logger
 
 
@@ -37,7 +37,7 @@ def train(args):
     assert cfg is not None
 
     # Config logs
-    logdir = f'logs/{time.strftime("%Y-%m-%d-%H-%M-%S")}({cfg["dataset"]}-train-RegSeg)'
+    logdir = f'logs/{time.strftime("%Y-%m-%d-%H-%M-%S")}({cfg["dataset"]}-train-Reg)'
     os.makedirs(logdir, exist_ok=True)
     shutil.copy(args.config, logdir)
 
@@ -67,7 +67,7 @@ def train(args):
     val_loader = DataLoader(val_set, batch_size=cfg['batch_size'], shuffle=False, num_workers=cfg['num_workers'], pin_memory=True)
 
     # Prepare the model
-    model = RegSeg(cfg)
+    model = Reg(cfg)
     model.to(device)
 
     # Define optimizer
