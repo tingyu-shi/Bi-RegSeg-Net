@@ -122,7 +122,7 @@ class RegSeg(nn.Module):
         # self.reg_block2 = RegBlock(self.channels[1], self.channels[1], self.channels[1] * 2)
         # self.reg_block1 = RegBlock(self.channels[0], self.channels[0], self.channels[0] * 2)
         self.reg_block = nn.ModuleList()
-        for i in range(3):
+        for i in range(4):
             self.reg_block.append(RegBlock(self.channels[i], self.channels[i], self.channels[i] * 2))
         self.transformer = nn.ModuleList()
         for i in range(2, 6):
