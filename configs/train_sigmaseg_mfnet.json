@@ -1,0 +1,34 @@
+{
+    "mode": "train",
+    "dataset": "MFNet",
+    "root": "../../dataset/MFNet",
+    "n_classes": 9,
+    "class_weight": "enet",
+    "height": 576,
+    "width": 768,
+    "backbone": "vmamba_tiny",
+
+    "normalize": true,
+    "flip_prob": 0.5,
+    "crop_rate": 0.1,
+    "crop_prob": 1.0,
+
+    "#": "save path for checkpoint",
+    "save_ckpt": "./checkpoints/mfnet",
+
+    "#": "dataset resides in memory",
+    "in_memory": false,
+    "#": "batch size",
+    "batch_size": 1,
+    "#": "child process used by the data load",
+    "num_workers": 10,
+    "#": "GPU ID number(s), -1 denote CPU (default: 0), e.g., \"0\" and \"-1\"",
+    "gpu": "0",
+
+    "#": "number of training epochs",
+    "epochs": 20,
+    "#": "learning rate",
+    "lr_start": 6e-5,
+    "lr_decay": 0.99,
+    "weight_decay": 0.01
+}
