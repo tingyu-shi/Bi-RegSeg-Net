@@ -4,3 +4,5 @@
 /results/
 /logs/
 /wandb/
+/nets/VMamba/selective_scan/build/
+/nets/VMamba/selective_scan/selective_scan.egg-info/
