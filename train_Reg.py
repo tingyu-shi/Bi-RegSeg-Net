@@ -169,9 +169,9 @@ def train(args):
                 warped_moving_ir = (torch.round(warped_moving_ir * 255.).type(torch.FloatTensor) / 255.).to(device)
                 mse_values, ncc_values, mi_values, pck_values = reg_metric(ir, warped_moving_ir, device)
                 val_mse_meter.update(np.mean(mse_values), n=cfg['batch_size'])
-                val_ncc_meter.update(sum(ncc_values), n=cfg['batch_size'])
-                val_mi_meter.update(sum(mi_values), n=cfg['batch_size'])
-                val_pck_meter.update(sum(pck_values), n=cfg['batch_size'])
+                val_ncc_meter.update(np.mean(ncc_values), n=cfg['batch_size'])
+                val_mi_meter.update(np.mean(mi_values), n=cfg['batch_size'])
+                val_pck_meter.update(np.mean(pck_values), n=cfg['batch_size'])
 
 
         # Update lr_scheduler
