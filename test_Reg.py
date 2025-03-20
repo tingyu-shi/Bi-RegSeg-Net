@@ -11,6 +11,7 @@ import os
 import argparse
 import shutil
 import time
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -34,6 +35,7 @@ def test(args):
     with open(args.config, 'r') as fp:
         cfg = json.load(fp)
     assert cfg is not None
+    cfg['batch_size'] = 1
 
     # Config logs
     logdir = f'logs/{time.strftime("%Y-%m-%d-%H-%M-%S")}({cfg["dataset"]}-test-Reg)'
@@ -58,7 +60,7 @@ def test(args):
     # Loading datasets
     print("===> Loading datasets")
     test_set = get_test_dataset(cfg)
-    val_loader = DataLoader(test_set, batch_size=cfg['batch_size'], shuffle=False, num_workers=cfg['num_workers'], pin_memory=True)
+    test_loader = DataLoader(test_set, batch_size=cfg['batch_size'], shuffle=False, num_workers=cfg['num_workers'], pin_memory=True)
 
     # Prepare the model
     model = Reg(cfg)
@@ -82,8 +84,8 @@ def test(args):
     # Test
     with torch.no_grad():
         model.eval()
-        for i, sample in enumerate(val_loader):
-            image_name = sample[0]
+        for i, sample in enumerate(test_loader):
+            image_name = sample[0][0]
             sample = sample[1]
             vis = sample['vis'].to(device)
             ir = sample['ir'].to(device)
@@ -115,15 +117,17 @@ def test(args):
             test_pck_meter.update(np.mean(pck_values), n=cfg['batch_size'])
 
             # Save registrated ir_affine_deform
-            utils.imsave(warped_moving_ir, cfg['save_image'] / 'ir_affine_deform_reg', image_name + '.png')
+            warped_moving_ir_path = Path(cfg['save_image']) / 'ir_affine_deform_reg'
+            utils.imsave(warped_moving_ir, warped_moving_ir_path, image_name + '.png')
 
             # Save estimated flow
-            est_disp_npy = flow.data.cpu().numpy()
-            est_disp_path = os.path.join(cfg['save_image'], 'reg_flow_disp', image_name + '.npy')
-            np.save(est_disp_path, est_disp_npy)
+            flow_disp_npy = flow.data.cpu().numpy()
+            flow_disp_path = Path(cfg['save_image'], 'reg_flow_disp', image_name + '.npy')
+            np.save(flow_disp_path, flow_disp_npy)
 
             # Save flow images
-            utils.save_flow(flow, cfg['save_image'] / 'reg_flow_image', image_name + '.png')
+            flow_path = Path(cfg['save_image']) / 'reg_flow_image'
+            utils.save_flow(flow, flow_path, image_name + '.png')
 
 
 
@@ -137,18 +141,18 @@ def test(args):
             # f'test mIoU={mIoU:.4f} mAcc={mAcc:.4f} '
         )
 
-        metrics = test_running_metrics.get_scores()
         print('=' * 10, 'out', '=' * 10)
         print('inference time per image: %.4f'%time_meter.avg)
         print('inference fps: %.4f'%(1/time_meter.avg))
-        for k, v in metrics[0].items():
-            print(k, v)
-        print('Class Acc:')
-        for k, v in metrics[1].items():
-            print(k, v)
-        print('Class IoU:')
-        for k, v in metrics[2].items():
-            print(k, v)
+        # metrics = test_running_metrics.get_scores()
+        # for k, v in metrics[0].items():
+        #     print(k, v)
+        # print('Class Acc:')
+        # for k, v in metrics[1].items():
+        #     print(k, v)
+        # print('Class IoU:')
+        # for k, v in metrics[2].items():
+        #     print(k, v)
 
 if __name__ == '__main__':
 
