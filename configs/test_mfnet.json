@@ -23,7 +23,7 @@
     "gpu": "0",
 
     "#": "the bast checkpoint path",
-    "load_ckpt": "./checkpoints/mfnet/2024-12-25-16-05(MFNet-train-VMambaEAEFNetSeg)_step_151_mIoU_0.5911_mAcc_0.7431.pth",
+    "load_ckpt": "./checkpoints/mfnet/2025-03-20-14-18-11(MFNet-train-Reg)_step_008.pth",
 
     "#": "save predict image",
     "save_image": "./results/mfnet"
