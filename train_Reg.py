@@ -11,6 +11,7 @@ import argparse
 import shutil
 import time
 
+import numpy as np
 import torch
 import wandb
 from torch import nn
@@ -18,7 +19,7 @@ from torch.utils.data import DataLoader
 
 from losses.losses import LovaszSoftmax, LossFunction_Dense
 from losses.soft_ce_loss import SoftCrossEntropyLoss
-from metrics import averageMeter, runningScore, MSE, NCC, MI, PCK
+from metrics import averageMeter, runningScore, reg_metric
 from nets.model import Reg
 from utils import get_train_val_dataset, save_ckpt, get_logger
 
@@ -92,10 +93,6 @@ def train(args):
     train_loss_meter = averageMeter()
     val_loss_meter = averageMeter()
     running_metrics_val = runningScore(cfg['n_classes'])
-    mse_metric = MSE().to(device)
-    ncc_metric = NCC().to(device)
-    mi_metric = MI().to(device)
-    pck_metric = PCK().to(device)
     val_mse_meter = averageMeter()
     val_ncc_meter = averageMeter()
     val_mi_meter = averageMeter()
@@ -170,14 +167,11 @@ def train(args):
                 ir = ir[:, 0:1, :, :]
                 warped_moving_ir = warped_moving_ir[:, 0:1, :, :]
                 warped_moving_ir = (torch.round(warped_moving_ir * 255.).type(torch.FloatTensor) / 255.).to(device)
-                mse = mse_metric(ir, warped_moving_ir)
-                ncc = ncc_metric(ir, warped_moving_ir)
-                mi = mi_metric(ir.squeeze(), warped_moving_ir.squeeze())
-                pck = pck_metric(ir.squeeze(0), warped_moving_ir.squeeze(0), 5)
-                val_mse_meter.update(mse)
-                val_ncc_meter.update(ncc)
-                val_mi_meter.update(mi)
-                val_pck_meter.update(pck)
+                mse_values, ncc_values, mi_values, pck_values = reg_metric(ir, warped_moving_ir, device)
+                val_mse_meter.update(np.mean(mse_values), n=cfg['batch_size'])
+                val_ncc_meter.update(sum(ncc_values), n=cfg['batch_size'])
+                val_mi_meter.update(sum(mi_values), n=cfg['batch_size'])
+                val_pck_meter.update(sum(pck_values), n=cfg['batch_size'])
 
 
         # Update lr_scheduler

@@ -190,7 +190,7 @@ class PCK(nn.Module):
             :param estimated_flow: numpy array of estimated optical flow.
             :param threshold: distance threshold in pixels to consider a keypoint correct.
             :return: PCK value.
-            """
+        """
         threshold /= 255.
 
         # 计算预测和真实之间的差异
@@ -273,3 +273,40 @@ class MI(nn.Module):
         mi = Ha + Hb - Hab
 
         return mi
+
+
+def reg_metric(fixed_images, moving_images, device):
+    """
+        Calculate MSE, NCC, MI and PCK-5 for each image in the batch.
+
+        :param fixed_images: [B, C, H, W]
+        :param moving_images: [B, C, H, W]
+        :param device: CPU/CUDA
+        :return: MSE, NCC, MI and PCK-5 for each image in the batch
+    """
+    mse_metric = MSE().to(device)
+    ncc_metric = NCC().to(device)
+    mi_metric = MI().to(device)
+    pck_metric = PCK().to(device)
+
+    batch_size = fixed_images.size(0)
+    mse_values = []
+    ncc_values = []
+    mi_values = []
+    pck_values = []
+
+    for i in range(batch_size):
+        fixed_image = fixed_images[i:i+1]
+        moving_image = moving_images[i:i+1]
+
+        mse = mse_metric(fixed_image, moving_image)
+        ncc = ncc_metric(fixed_image, moving_image)
+        mi = mi_metric(fixed_image.squeeze(), moving_image.squeeze())
+        pck = pck_metric(fixed_image.squeeze(0), moving_image.squeeze(0), 5)
+
+        mse_values.append(mse.item())
+        ncc_values.append(ncc.item())
+        mi_values.append(mi.item())
+        pck_values.append(pck.item())
+
+    return mse_values, ncc_values, mi_values, pck_values
