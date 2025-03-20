@@ -224,11 +224,11 @@ def train(args):
         #     save_ckpt(cfg['save_ckpt'], logdir.split('/')[-1] + '_epoch_' + f'{ep + 1:03d}' + '_mIoU_' + f'{max_mIoU:.4f}' + '_mAcc_' + f'{max_mAcc:.4f}', model)
         # elif mIoU > max_mIoU:
         #     max_mIoU = mIoU
-        #     logger.info(f'save checkpoint {ep + 1}')
+        #     logger.info(f'Save | save checkpoint {ep + 1}')
         #     save_ckpt(cfg['save_ckpt'], logdir.split('/')[-1] + '_epoch_' + f'{ep + 1:03d}' + '_mIoU_' + f'{max_mIoU:.4f}', model)
         # elif mAcc > max_mAcc:
         #     max_mAcc = mAcc
-        #     logger.info(f'save checkpoint {ep + 1}')
+        #     logger.info(f'Save | save checkpoint {ep + 1}')
         #     save_ckpt(cfg['save_ckpt'], logdir.split('/')[-1] + '_epoch_' + f'{ep + 1:03d}' + '_mAcc_' + f'{max_mAcc:.4f}', model)
 
         save_ckpt(cfg['save_ckpt'], logdir.split('/')[-1] + '_epoch_' + f'{ep + 1:03d}', model)
