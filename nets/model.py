@@ -176,10 +176,11 @@ class Reg(nn.Module):
         wx4 = fx4
         flow = self.reg_block[3](wx4, fy4)
         flowall = flow
-        # warped_x4 = self.transformer[0](fx4, flowall)
-        # rewarped_y4 = self.transformer[0](fy4, -flowall)
+        # warped_fx4 = self.transformer[0](fx4, flowall)
+        # rewarped_fy4 = self.transformer[0](fy4, -flowall)
         # fx4 = fx4.view(B, -1, H // self.patch_size, W // self.patch_size)
         # fy4 = fy4.view(B, -1, H // self.patch_size, W // self.patch_size)
+        # warped_fx4 = warped_fx4.view(B, -1, H // self.patch_size, W // self.patch_size)
 
         # range b
         B, C, H, W = fx3.shape
@@ -189,10 +190,11 @@ class Reg(nn.Module):
         wx3 = self.transformer[2](fx3, flowall)
         flow = self.reg_block[2](wx3, fy3)
         flowall = self.transformer[2](flowall, flow) + flow
-        # warped_x3 = self.transformer[0](fx3, flowall)
-        # rewarped_y3 = self.transformer[0](fy3, -flowall)
+        # warped_fx3 = self.transformer[0](fx3, flowall)
+        # rewarped_fy3 = self.transformer[0](fy3, -flowall)
         # fx3 = fx3.view(B, -1, H // self.patch_size, W // self.patch_size)
         # fy3 = fy3.view(B, -1, H // self.patch_size, W // self.patch_size)
+        # warped_fx3 = warped_fx3.view(B, -1, H // self.patch_size, W // self.patch_size)
 
         # range c
         B, C, H, W = fx2.shape
@@ -206,6 +208,7 @@ class Reg(nn.Module):
         # rewarped_y2 = self.transformer[0](fy2, -flowall)
         # fx2 = fx2.view(B, -1, H // self.patch_size, W // self.patch_size)
         # fy2 = fy2.view(B, -1, H // self.patch_size, W // self.patch_size)
+        # warped_fx2 = warped_fx2.view(B, -1, H // self.patch_size, W // self.patch_size)
 
         # range d
         B, C, H, W = fx1.shape
@@ -219,6 +222,7 @@ class Reg(nn.Module):
         # rewarped_y1 = self.transformer[0](fy1, -flowall)
         # fx1 = fx1.view(B, -1, H // self.patch_size, W // self.patch_size)
         # fy1 = fy1.view(B, -1, H // self.patch_size, W // self.patch_size)
+        # warped_fx1 = warped_fx1.view(B, -1, H // self.patch_size, W // self.patch_size)
 
         warped_x = self.transformer[0](x, flowall)
         rewarped_y = self.transformer[0](y, -flowall)

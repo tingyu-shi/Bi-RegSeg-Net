@@ -220,15 +220,13 @@ class MambaFusion(nn.Module):
                 self.absolute_pos_embed.append(absolute_pos_embed)
                 self.absolute_pos_embed_x.append(absolute_pos_embed_x)
 
-    def forward_features(self, rgb, x):
+    def forward_features(self, outs_rgb, outs_x):
         """
-        x_rgb: B x C x H x W
+        outs_rgb: 4 x [B x C x H x W]
+        outs_x: 4 x [B x C x H x W]
         """
-        B = rgb.shape[0]
+        B = outs_rgb.shape[0]
         outs_fused = []
-
-        outs_rgb = self.vssm(rgb)  # B x C x H x W
-        outs_x = self.vssm(x)  # B x C x H x W
 
         for i in range(4):
             if self.ape:
