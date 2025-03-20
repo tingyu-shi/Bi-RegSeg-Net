@@ -161,7 +161,7 @@ def train(args):
                 # # Metric Acc and IoU
                 # predict = out.max(1)[1].cpu().numpy()  # [b, h, w]
                 # label = label.cpu().numpy()
-                # running_metrics_val.update(label, predict)
+                # test_running_metrics.update(label, predict)
 
                 # Metric MSE, NCC, MI and PCK
                 ir = ir[:, 0:1, :, :]
@@ -178,8 +178,8 @@ def train(args):
         lr = optimizer.param_groups[0]['lr']
         scheduler.step()
         # # Update mIoU mAcc
-        # mIoU = running_metrics_val.get_scores()[0]['Mean IoU: ']
-        # mAcc = running_metrics_val.get_scores()[0]['Mean Acc: ']
+        # mIoU = val_running_metrics.get_scores()[0]['Mean IoU: ']
+        # mAcc = val_running_metrics.get_scores()[0]['Mean Acc: ']
 
         # Save logs
         logger.info(

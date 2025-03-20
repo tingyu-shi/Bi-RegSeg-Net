@@ -17,6 +17,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
+import utils
 from losses.losses import LovaszSoftmax, LossFunction_Dense
 from losses.soft_ce_loss import SoftCrossEntropyLoss
 from metrics import averageMeter, runningScore, reg_metric
@@ -24,7 +25,7 @@ from nets.model import Reg
 from utils import get_train_val_dataset, save_ckpt, get_logger, get_test_dataset
 
 
-def train(args):
+def test(args):
     """
         训练函数
         :param args: 训练配置
@@ -72,28 +73,39 @@ def train(args):
     test_ncc_meter = averageMeter()
     test_mi_meter = averageMeter()
     test_pck_meter = averageMeter()
+    time_meter = averageMeter()
 
-    # Define max_mIoU and max_mAcc
-    max_mIoU = 0
-    max_mAcc = 0
+    # Make Dirs
+    os.makedirs(os.path.join(cfg['save_image'], 'reg_flow_disp'), exist_ok=True)
+    os.makedirs(os.path.join(cfg['save_image'], 'reg_flow_image'), exist_ok=True)
+    os.makedirs(os.path.join(cfg['save_image'], 'ir_affine_deform_reg'), exist_ok=True)
+    # os.makedirs(os.path.join(cfg['save_image'], 'predict'), exist_ok=True)
+    # os.makedirs(os.path.join(cfg['save_image'], 'predict_rgb'), exist_ok=True)
 
     # Test
     with torch.no_grad():
         model.eval()
         for i, sample in enumerate(val_loader):
+            image_name = sample[0]
             sample = sample[1]
             vis = sample['vis'].to(device)
             ir = sample['ir'].to(device)
             ir_affine_deform = sample['ir_affine_deform'].to(device)
             ir_pseudo = sample['ir_pseudo'].to(device)
             label = sample['label'].to(device)
+
+            # Metric time
+            time_start = time.time()
+
             warped_moving_ir, rewarped_fixed_ir_pseudo, flow = model(ir_affine_deform, ir_pseudo, vis)
             # out = model(rgb, modal_x)
+
+            time_meter.update(time.time() - time_start, cfg['batch_size'])
 
             # # Metric Acc and IoU
             # predict = out.max(1)[1].cpu().numpy()  # [b, h, w]
             # label = label.cpu().numpy()
-            # running_metrics_val.update(label, predict)
+            # test_running_metrics.update(label, predict)
 
             # Metric MSE, NCC, MI and PCK
             ir = ir[:, 0:1, :, :]
@@ -105,9 +117,22 @@ def train(args):
             test_mi_meter.update(np.mean(mi_values), n=cfg['batch_size'])
             test_pck_meter.update(np.mean(pck_values), n=cfg['batch_size'])
 
+            # Save registrated ir_affine_deform
+            utils.imsave(warped_moving_ir, cfg['save_image'] / 'ir_affine_deform_reg', image_name + '.png')
+
+            # Save estimated flow
+            est_disp_npy = flow.data.cpu().numpy()
+            est_disp_path = os.path.join(cfg['save_image'], 'reg_flow_disp', image_name + '.npy')
+            np.save(est_disp_path, est_disp_npy)
+
+            # Save flow images
+            utils.save_flow(flow, cfg['save_image'] / 'reg_flow_image', image_name + '.png')
+
+
+
         # # Update mIoU mAcc
-        # mIoU = running_metrics_val.get_scores()[0]['Mean IoU: ']
-        # mAcc = running_metrics_val.get_scores()[0]['Mean Acc: ']
+        # mIoU = test_running_metrics.get_scores()[0]['Mean IoU: ']
+        # mAcc = test_running_metrics.get_scores()[0]['Mean Acc: ']
 
         # Save logs
         logger.info(
@@ -115,12 +140,18 @@ def train(args):
             # f'test mIoU={mIoU:.4f} mAcc={mAcc:.4f} '
         )
 
-        # Reset meters
-        test_running_metrics.reset()
-        test_mse_meter.reset()
-        test_ncc_meter.reset()
-        test_mi_meter.reset()
-        test_pck_meter.reset()
+        metrics = test_running_metrics.get_scores()
+        print('=' * 10, 'out', '=' * 10)
+        print('inference time per image: %.4f'%time_meter.avg)
+        print('inference fps: %.4f'%(1/time_meter.avg))
+        for k, v in metrics[0].items():
+            print(k, v)
+        print('Class Acc:')
+        for k, v in metrics[1].items():
+            print(k, v)
+        print('Class IoU:')
+        for k, v in metrics[2].items():
+            print(k, v)
 
 if __name__ == '__main__':
 
