@@ -117,9 +117,9 @@ def train(args):
             # Update loss
             # loss_1 = criterion_1(out, label)
             # loss_2 = criterion_2(out, label)
-            # loss = 0.5 * loss_1 + 0.5 * loss_2
+            # seg_loss = 0.5 * loss_1 + 0.5 * loss_2
             # loss_3 = criterion_3(out, label)
-            # loss = 0.33 * loss_1 + 0.33 * loss_2 + 0.33 * loss_3
+            # seg_loss = 0.33 * loss_1 + 0.33 * loss_2 + 0.33 * loss_3
             # train_loss_meter_1.update(loss_1.item())
             # train_loss_meter_2.update(loss_2.item())
             # train_loss_meter_3.update(loss_3.item())
@@ -128,7 +128,7 @@ def train(args):
 
             # Backpropagation and optimize
             optimizer.zero_grad()
-            # loss.backward()
+            # seg_loss.backward()
             reg_loss.backward()
             optimizer.step()
 
@@ -148,13 +148,13 @@ def train(args):
                 # Update loss
                 # loss_1 = criterion_1(out, label)
                 # loss_2 = criterion_2(out, label)
-                # loss = 0.5 * loss_1 + 0.5 * loss_2
+                # seg_loss = 0.5 * loss_1 + 0.5 * loss_2
                 # loss_3 = criterion_3(out, label)
-                # loss = 0.33 * loss_1 + 0.33 * loss_2 + 0.33 * loss_3
+                # seg_loss = 0.33 * loss_1 + 0.33 * loss_2 + 0.33 * loss_3
                 # val_loss_meter_1.update(loss_1.item())
                 # val_loss_meter_2.update(loss_2.item())
                 # val_loss_meter_3.update(loss_3.item())
-                # loss = criterion_1(out, label)
+                # seg_loss = criterion_1(out, label)
                 reg_loss, _, _, _ = criterion_1(warped_moving_ir, rewarped_fixed_ir_pseudo, ir_pseudo, ir_affine_deform, flow)
                 val_loss_meter.update(reg_loss.item())
 
