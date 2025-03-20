@@ -230,7 +230,7 @@ def train(args):
         #     max_mAcc = mAcc
         #     logger.info(f'Save | save checkpoint {ep + 1}')
         #     save_ckpt(cfg['save_ckpt'], logdir.split('/')[-1] + '_epoch_' + f'{ep + 1:03d}' + '_mAcc_' + f'{max_mAcc:.4f}', model)
-
+        logger.info(f'Save | save checkpoint {ep + 1}')
         save_ckpt(cfg['save_ckpt'], logdir.split('/')[-1] + '_epoch_' + f'{ep + 1:03d}', model)
 
         # Reset meters
