@@ -146,8 +146,6 @@ def train(args):
                 ir_pseudo = sample['ir_pseudo'].to(device)
                 label = sample['label'].to(device)
                 warped_moving_ir, rewarped_fixed_ir_pseudo, flow = model(ir_affine_deform, ir_pseudo, vis)
-                warped_moving_ir = warped_moving_ir[:, 0:1, :, :]
-                rewarped_fixed_ir_pseudo = rewarped_fixed_ir_pseudo[:, 0:1, :, :]
                 # out = model(rgb, modal_x)
 
                 # Update loss
@@ -169,6 +167,7 @@ def train(args):
                 # running_metrics_val.update(label, predict)
 
                 # Metric MSE, NCC, MI and PCK
+                warped_moving_ir = warped_moving_ir[:, 0:1, :, :]
                 warped_moving_ir = (torch.round(warped_moving_ir * 255.).type(torch.FloatTensor) / 255.).to(device)
                 mse = mse_metric(ir, warped_moving_ir)
                 ncc = ncc_metric(ir, warped_moving_ir)
