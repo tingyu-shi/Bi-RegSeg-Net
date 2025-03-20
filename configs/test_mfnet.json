@@ -4,31 +4,27 @@
     "root": "../../dataset/MFNet",
     "n_classes": 9,
     "class_weight": "enet",
-    "height": 480,
-    "width": 640,
+    "height": 576,
+    "width": 768,
     "backbone": "vmamba_tiny",
 
     "normalize": false,
 
-    "#": "the bast checkpoint path",
-    "load_ckpt": "./checkpoints/mfnet/2024-12-25-16-05(MFNet-train-VMambaEAEFNetSeg)_step_151_mIoU_0.5911_mAcc_0.7431.pth",
-    "#": "2024-12-14-21-02(MFNet-train-MobileMambaSeg)_step_36_mIoU_0.4773.pth",
-    "#": "2024-12-18-11-46(MFNet-train-MobileNetSeg)_step_041_mIoU_0.5383.pth",
-    "#": "2024-12-21-00-27(MFNet-train-VMambaEAEFNetSeg)_step_094_mIoU_0.4254.pth",
-    "#": "2024-12-23-17-47(MFNet-train-EAEFNetSeg)_step_061_mIoU_0.5241.pth",
-    "#": "EAEFNetSeg_best.pth",
-    "#": "2024-12-24-18-14(MFNet-train-VMambaEAEFNetSeg)_step_238.pth",
-    "#": "2024-12-25-16-05(MFNet-train-VMambaEAEFNetSeg)_step_151_mIoU_0.5911_mAcc_0.7431.pth",
-
-    "#": "save predict image",
-    "save_image": "./results/mfnet",
+    "#": "save path for checkpoint",
+    "save_ckpt": "./checkpoints/mfnet",
 
     "#": "dataset resides in memory",
     "in_memory": false,
     "#": "batch size",
-    "batch_size": 16,
+    "batch_size": 2,
     "#": "child process used by the data load",
-    "num_workers": 10,
-    "#": "GPU ID number(s), -1 denote CPU, e.g., \"-1\" and \"0\"",
-    "gpu": "0"
+    "num_workers": 4,
+    "#": "GPU ID number(s), -1 denote CPU (default: 0), e.g., \"0\" and \"-1\"",
+    "gpu": "0",
+
+    "#": "the bast checkpoint path",
+    "load_ckpt": "./checkpoints/mfnet/2024-12-25-16-05(MFNet-train-VMambaEAEFNetSeg)_step_151_mIoU_0.5911_mAcc_0.7431.pth",
+
+    "#": "save predict image",
+    "save_image": "./results/mfnet"
 }

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time: 2025/3/18 0:28
 # @Author: Tingyu Shi
-# @File: train.py.py
+# @File: train.py
 # @Description: train.py
 
 import json
@@ -92,7 +92,7 @@ def train(args):
     # val_loss_meter_3 = averageMeter()
     train_loss_meter = averageMeter()
     val_loss_meter = averageMeter()
-    running_metrics_val = runningScore(cfg['n_classes'])
+    val_running_metrics = runningScore(cfg['n_classes'])
     val_mse_meter = averageMeter()
     val_ncc_meter = averageMeter()
     val_mi_meter = averageMeter()
@@ -242,7 +242,7 @@ def train(args):
         # val_loss_meter_3.reset()
         train_loss_meter.reset()
         val_loss_meter.reset()
-        running_metrics_val.reset()
+        val_running_metrics.reset()
         val_mse_meter.reset()
         val_ncc_meter.reset()
         val_mi_meter.reset()
@@ -252,7 +252,7 @@ def train(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="train")
-    parser.add_argument("--config", default="./configs/train_sigmaseg_mfnet.json", type=str, help="Configuration file to train")
-    # parser.add_argument("--config", default="./configs/train_sigmaseg_fmb.json", type=str, help="Configuration file to train")
+    parser.add_argument("--config", default="./configs/train_mfnet.json", type=str, help="Configuration file to train")
+    # parser.add_argument("--config", default="./configs/train_fmb.json", type=str, help="Configuration file to train")
     args = parser.parse_args()
     train(args)
