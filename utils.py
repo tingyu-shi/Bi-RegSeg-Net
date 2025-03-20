@@ -11,7 +11,10 @@ import sys
 import cv2
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, Dataset
+import kornia
+import pathlib
+from torch import Tensor, nn
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from data.fmb import FMB_Dataset
@@ -373,3 +376,64 @@ def get_logger(logdir):
     logger.addHandler(file_handler)
 
     return logger
+
+
+def imsave(im_s: [Tensor], dst: pathlib.Path, im_name: str = ''):
+    """
+    save images to path
+    :param im_s: image(s)
+    :param dst: if one image: path; if multiple images: folder path
+    :param im_name: name of image
+    """
+    im_s = im_s if type(im_s) == list else [im_s]
+    dst = [dst / str(i + 1).zfill(3) / im_name for i in range(len(im_s))] if len(im_s) != 1 else [dst / im_name]
+    for im_ts, p in zip(im_s, dst):
+        im_ts = im_ts.squeeze().cpu()
+        p.parent.mkdir(parents=True, exist_ok=True)
+        im_cv = kornia.utils.tensor_to_image(im_ts * 255.)
+        # im_cv = kornia.utils.tensor_to_image(im_ts)
+        cv2.imwrite(str(p), im_cv)
+
+def save_flow(flow: [Tensor], dst: pathlib.Path, im_name: str = ''):
+    rgb_flow = flow2rgb(flow, max_value=None) # (3, 512, 512) type; numpy.ndarray
+    im_s = rgb_flow if type(rgb_flow) == list else [rgb_flow]
+    dst = [dst / str(i + 1).zfill(3) / im_name for i in range(len(im_s))] if len(im_s) != 1 else [dst / im_name]
+    for im_ts, p in zip(im_s, dst):
+        p.parent.mkdir(parents=True, exist_ok=True)
+        im_cv = (im_ts * 255).astype(np.uint8).transpose(1, 2, 0)
+        cv2.imwrite(str(p), im_cv)
+
+def flow2rgb(flow_map: [Tensor], max_value: None):
+    flow_map_np = flow_map.squeeze().detach().cpu().numpy()
+    _, h, w = flow_map_np.shape
+    rgb_map = np.ones((3, h, w)).astype(np.float32)
+    if max_value is not None:
+        normalized_flow_map = flow_map_np / max_value
+    else:
+        normalized_flow_map = flow_map_np / (np.abs(flow_map_np).max())
+    rgb_map[0] += normalized_flow_map[0]
+    rgb_map[1] -= 0.5 * (normalized_flow_map[0] + normalized_flow_map[1])
+    rgb_map[2] += normalized_flow_map[1]
+    rgb_flow = rgb_map.clip(0, 1)
+    return rgb_flow
+
+
+class UNPAD(nn.Module):
+
+    def __init__(self):
+        super(UNPAD, self).__init__()
+        self.pad = nn.ZeroPad2d(padding=(-64, -64, -48, -48))
+
+    def forward(self, x):
+        x = self.pad(x)
+        return x
+
+class PAD(nn.Module):
+
+    def __init__(self):
+        super(PAD, self).__init__()
+        self.pad = nn.ZeroPad2d(padding=(64, 64, 48, 48))
+
+    def forward(self, x):
+        x = self.pad(x)
+        return x
