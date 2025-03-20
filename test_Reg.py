@@ -14,15 +14,12 @@ import time
 
 import numpy as np
 import torch
-from torch import nn
 from torch.utils.data import DataLoader
 
 import utils
-from losses.losses import LovaszSoftmax, LossFunction_Dense
-from losses.soft_ce_loss import SoftCrossEntropyLoss
 from metrics import averageMeter, runningScore, reg_metric
 from nets.model import Reg
-from utils import get_train_val_dataset, save_ckpt, get_logger, get_test_dataset
+from utils import get_logger, get_test_dataset
 
 
 def test(args):
