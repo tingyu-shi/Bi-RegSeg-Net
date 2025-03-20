@@ -21,7 +21,7 @@
     "#": "batch size",
     "batch_size": 1,
     "#": "child process used by the data load",
-    "num_workers": 10,
+    "num_workers": 4,
     "#": "GPU ID number(s), -1 denote CPU (default: 0), e.g., \"0\" and \"-1\"",
     "gpu": "0",
 

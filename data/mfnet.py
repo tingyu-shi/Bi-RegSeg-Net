@@ -100,28 +100,21 @@ class MFNet_Dataset(data.Dataset):
         image_name = self.infos[index].strip()
 
         vis = Image.open(os.path.join(self.root, 'pad', 'vis', image_name + '.png'))
+        ir_pseudo = Image.open(os.path.join(self.root, 'pad', 'ir_pseudo', image_name + '.png'))
+        ir_pseudo = ir_pseudo.convert('RGB')
         label = Image.open(os.path.join(self.root, 'pad', 'label', image_name + '.png'))
         ir = Image.open(os.path.join(self.root, 'pad', 'ir', image_name + '.png'))
         ir = ir.convert('RGB')
-        ir_pseudo = Image.open(os.path.join(self.root, 'pad', 'ir_pseudo', image_name + '.png'))
-        ir_pseudo = ir_pseudo.convert('RGB')
         ir_affine_deform = Image.open(os.path.join(self.root, 'pad', 'ir_affine_deform', image_name + '.png'))
         ir_affine_deform = ir_affine_deform.convert('RGB')
 
-
         sample = {
-            'vis': vis,
-            'ir': ir,
-            'ir_pseudo': ir_pseudo,
-            'ir_affine_deform': ir_affine_deform,
-            'label': label
+            'vis': self.im_to_tensor(vis),                                       # [b, c, h, w]
+            'ir_pseudo': self.im_to_tensor(ir_pseudo),                           # [b, c, h, w]
+            'ir': self.im_to_tensor(ir),                                         # [b, c, h, w]
+            'ir_affine_deform': self.im_to_tensor(ir_affine_deform),             # [b, c, h, w]
+            'label': torch.from_numpy(np.asarray(label, dtype=np.int64)).long()  # [b, h, w]
         }
-
-        sample['vis'] = self.im_to_tensor(sample['vis'])  # [b, c, h, w]
-        sample['ir'] = self.the_to_tensor(sample['ir'])  # [b, c, h, w]
-        sample['ir_pseudo'] = self.the_to_tensor(sample['ir_pseudo'])  # [b, c, h, w]
-        sample['ir_affine_deform'] = self.the_to_tensor(sample['ir_affine_deform'])  # [b, c, h, w]
-        sample['label'] = torch.from_numpy(np.asarray(sample['label'], dtype=np.int64)).long()  # [b, h, w]
 
         if self.mode == 'train' and self.do_aug:
             sample = self.aug(sample)
