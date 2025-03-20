@@ -17,10 +17,9 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-import utils
 from metrics import averageMeter, runningScore, reg_metric
 from nets.model import Reg
-from utils import get_logger, get_test_dataset
+from utils import get_logger, get_test_dataset, load_ckpt, imsave, save_flow
 
 
 def test(args):
@@ -64,6 +63,7 @@ def test(args):
 
     # Prepare the model
     model = Reg(cfg)
+    model = load_ckpt(cfg['load_ckpt'], model, cfg['gpu'])
     model.to(device)
 
     # Define Meters
@@ -118,7 +118,7 @@ def test(args):
 
             # Save registrated ir_affine_deform
             warped_moving_ir_path = Path(cfg['save_image']) / 'ir_affine_deform_reg'
-            utils.imsave(warped_moving_ir, warped_moving_ir_path, image_name + '.png')
+            imsave(warped_moving_ir, warped_moving_ir_path, image_name + '.png')
 
             # Save estimated flow
             flow_disp_npy = flow.data.cpu().numpy()
@@ -127,7 +127,7 @@ def test(args):
 
             # Save flow images
             flow_path = Path(cfg['save_image']) / 'reg_flow_image'
-            utils.save_flow(flow, flow_path, image_name + '.png')
+            save_flow(flow, flow_path, image_name + '.png')
 
 
 
