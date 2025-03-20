@@ -28,7 +28,7 @@
     "#": "number of training epochs",
     "epochs": 20,
     "#": "learning rate",
-    "lr_start": 6e-5,
+    "lr_start": 6e-4,
     "lr_decay": 0.99,
     "weight_decay": 0.01
 }
