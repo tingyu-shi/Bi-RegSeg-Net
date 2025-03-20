@@ -167,6 +167,7 @@ def train(args):
                 # running_metrics_val.update(label, predict)
 
                 # Metric MSE, NCC, MI and PCK
+                ir = ir[:, 0:1, :, :]
                 warped_moving_ir = warped_moving_ir[:, 0:1, :, :]
                 warped_moving_ir = (torch.round(warped_moving_ir * 255.).type(torch.FloatTensor) / 255.).to(device)
                 mse = mse_metric(ir, warped_moving_ir)
