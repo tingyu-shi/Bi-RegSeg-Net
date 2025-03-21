@@ -54,7 +54,7 @@ class RegBlock(nn.Module):
         self.Conv3 = ConvResBlock(out_channel, out_channel)
         self.Conv4 = nn.Conv2d(out_channel, out_channel//2, 3, padding=1)
         self.Conv5 = nn.Conv2d(out_channel//2, 2, 3, padding=1)
-        #TODO: self.channels = [96, 192, 384, 768]，可否根据每层channels动态定义nn.Conv2d的数量（==2，3，4）和in_channel、out_channel参数
+        #TODO: self.channels = [96, 192, 384, 768]，self.channels // patch_size**2 = [6, 12, 24, 48]，可否根据每层channels动态定义nn.Conv2d的数量（==2，3，4）和in_channel、out_channel参数
 
     def forward(self, x, y):
         concat = torch.cat([x, y], dim=1)
@@ -257,12 +257,12 @@ class RegSeg(nn.Module):
 if __name__ == '__main__':
     import json
     cfg = None
-    with open('../configs/train_sigmaseg_mfnet.json', 'r') as fp:
+    with open('../configs/train_mfnet.json', 'r') as fp:
         cfg = json.load(fp)
     assert cfg is not None
     num_minibatch = 1
-    ir_affine_deform = torch.randn(num_minibatch, 1, 576, 768).cuda().expand(-1, 3, -1, -1)
-    ir_pseudo = torch.randn(num_minibatch, 1, 576, 768).cuda().expand(-1, 3, -1, -1)
+    ir_affine_deform = torch.randn(num_minibatch, 3, 576, 768).cuda().expand(-1, 3, -1, -1)
+    ir_pseudo = torch.randn(num_minibatch, 3, 576, 768).cuda().expand(-1, 3, -1, -1)
     vis = torch.randn(num_minibatch, 3, 576, 768).cuda()
     model = Reg(cfg).cuda(0)
     warped_moving_ir, rewarped_fixed_ir_pseudo, flow = model(ir_affine_deform, ir_pseudo, vis)

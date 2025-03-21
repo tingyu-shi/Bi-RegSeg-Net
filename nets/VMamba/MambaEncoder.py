@@ -155,6 +155,7 @@ class MambaEncoder(nn.Module):
         super().__init__()
 
         self.vssm = Backbone_VSSM(
+            patch_size=patch_size,
             pretrained=pretrained,
             norm_layer=norm_layer,
             num_classes=num_classes,
