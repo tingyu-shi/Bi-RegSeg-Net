@@ -26,9 +26,9 @@
     "gpu": "0",
 
     "#": "number of training epochs",
-    "epochs": 200,
-    "#": "learning rate (1e-5 5e-4)",
-    "lr_start": 5e-5,
+    "epochs": 500,
+    "#": "learning rate (1e-4 5e-4)",
+    "lr_start": 1e-4,
     "lr_decay": 0.99,
     "weight_decay": 0.01
 }

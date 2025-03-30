@@ -140,7 +140,7 @@ def train(args):
 
         # Update lr
         lr = optimizer.param_groups[0]['lr']
-        scheduler.step()
+        # scheduler.step()
 
         # Val
         with torch.no_grad():
