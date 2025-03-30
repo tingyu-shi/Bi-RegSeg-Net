@@ -46,9 +46,9 @@ def train(args):
     logger.info(f'Conf | use logdir {logdir}')
     logger.info(f'Conf | use backbone {cfg["backbone"]}')
 
-    # # Config wandb
-    # miya = wandb.init(project='train_RegSeg', config=cfg, resume='allow')
-    # miya.config.update(dict(logdir=logdir))
+    # Config wandb
+    miya = wandb.init(project='train_RegSeg', config=cfg, resume='allow')
+    miya.config.update(dict(logdir=logdir))
 
     # Handling devices
     print('===> Handling devices')
@@ -102,6 +102,12 @@ def train(args):
     max_mIoU = 0
     max_mAcc = 0
 
+    # Define max_MSE, max_NCC, max_MI and max_PCK
+    min_MSE = 1
+    max_NCC = 0
+    max_MI = 0
+    max_PCK = 0
+
     for ep in range(cfg['epochs']):
         # Train
         model.train()
@@ -131,6 +137,10 @@ def train(args):
             # seg_loss.backward()
             reg_loss.backward()
             optimizer.step()
+
+        # Update lr_scheduler
+        lr = optimizer.param_groups[0]['lr']
+        scheduler.step()
 
         # Val
         with torch.no_grad():
@@ -173,13 +183,15 @@ def train(args):
                 val_mi_meter.update(np.mean(mi_values), n=cfg['batch_size'])
                 val_pck_meter.update(np.mean(pck_values), n=cfg['batch_size'])
 
-
-        # Update lr_scheduler
-        lr = optimizer.param_groups[0]['lr']
-        scheduler.step()
         # # Update mIoU mAcc
         # mIoU = val_running_metrics.get_scores()[0]['Mean IoU: ']
         # mAcc = val_running_metrics.get_scores()[0]['Mean Acc: ']
+
+        # Update MSE, NCC, MI and PCK
+        MSE = val_mse_meter.avg
+        NCC = val_ncc_meter.avg
+        MI = val_mi_meter.avg
+        PCK = val_pck_meter.avg
 
         # Save logs
         logger.info(
@@ -189,31 +201,31 @@ def train(args):
             # f'train/val loss_SoftCrossEntropy={train_loss_meter_1.avg:.5f}/{val_loss_meter_1.avg:.5f}, '
             # f'train/val loss_LovaszSoftmax={train_loss_meter_2.avg:.5f}/{val_loss_meter_2.avg:.5f}, '
             # f'train/val loss_Dice={train_loss_meter_3.avg:.5f}/{val_loss_meter_3.avg:.5f}, '
-            f'val MSE={val_mse_meter.avg:.4f} NCC={val_ncc_meter.avg:.4f} MI={val_mi_meter.avg:.4f} PCK-5={val_pck_meter.avg:.4f}, '
+            f'val MSE={MSE:.4f} NCC={NCC:.4f} MI={MI:.4f} PCK-5={PCK:.4f}, '
             # f'val mIoU={mIoU:.4f} mAcc={mAcc:.4f} '
         )
 
-        # # Save wandb
-        # miya.log({
-        #     'epoch': ep + 1,
-        #     'learning rate': lr,
-        #     'train loss': train_loss_meter.avg,
-        #     'val loss': val_loss_meter.avg,
-        #     # 'train loss (CrossEntropy)': train_loss_meter_1.avg,
-        #     # 'val loss (CrossEntropy)': val_loss_meter_1.avg,
-        #     # 'train loss (SoftCrossEntropy)': train_loss_meter_1.avg,
-        #     # 'val loss (SoftCrossEntropy)': val_loss_meter_1.avg,
-        #     # 'train loss (LovaszSoftmax)': train_loss_meter_2.avg,
-        #     # 'val loss (LovaszSoftmax)': val_loss_meter_2.avg,
-        #     # 'train loss (Dice)': train_loss_meter_3.avg,
-        #     # 'val loss (Dice)': val_loss_meter_3.avg,
-        #     'val MSE': val_mse_meter.avg,
-        #     'val NCC': val_ncc_meter.avg,
-        #     'val MI': val_mi_meter.avg,
-        #     'val PCK': val_pck_meter.avg,
-        #     # 'val mIoU': mIoU,
-        #     # 'val mAcc': mAcc
-        # })
+        # Save wandb
+        miya.log({
+            'epoch': ep + 1,
+            'learning rate': lr,
+            'train loss': train_loss_meter.avg,
+            'val loss': val_loss_meter.avg,
+            # 'train loss (CrossEntropy)': train_loss_meter_1.avg,
+            # 'val loss (CrossEntropy)': val_loss_meter_1.avg,
+            # 'train loss (SoftCrossEntropy)': train_loss_meter_1.avg,
+            # 'val loss (SoftCrossEntropy)': val_loss_meter_1.avg,
+            # 'train loss (LovaszSoftmax)': train_loss_meter_2.avg,
+            # 'val loss (LovaszSoftmax)': val_loss_meter_2.avg,
+            # 'train loss (Dice)': train_loss_meter_3.avg,
+            # 'val loss (Dice)': val_loss_meter_3.avg,
+            'val MSE': MSE,
+            'val NCC': NCC,
+            'val MI': MI,
+            'val PCK': PCK,
+            # 'val mIoU': mIoU,
+            # 'val mAcc': mAcc
+        })
 
         # Save checkpoints
         os.makedirs(cfg['save_ckpt'], exist_ok=True)
@@ -230,8 +242,12 @@ def train(args):
         #     max_mAcc = mAcc
         #     logger.info(f'Save | save checkpoint {ep + 1}')
         #     save_ckpt(cfg['save_ckpt'], logdir.split('/')[-1] + '_epoch_' + f'{ep + 1:03d}' + '_mAcc_' + f'{max_mAcc:.4f}', model)
-        logger.info(f'Save | save checkpoint {ep + 1}')
-        save_ckpt(cfg['save_ckpt'], logdir.split('/')[-1] + '_epoch_' + f'{ep + 1:03d}', model)
+
+        comparison_results = [MSE <= min_MSE, NCC >= max_NCC, MI >= max_MI, PCK >= max_PCK]
+        if sum(comparison_results) >= 3:
+            min_MSE, max_NCC, max_MI, max_PCK = MSE, NCC, MI, PCK
+            logger.info(f'Save | save checkpoint {ep + 1}')
+            save_ckpt(cfg['save_ckpt'], logdir.split('/')[-1] + '_epoch_' + f'{ep + 1:03d}' + '_MSE_' + f'{min_MSE:.4f}' + '_NCC_' + f'{max_NCC:.4f}' + '_MI_' + f'{max_MI:.4f}' + '_PCK_' + f'{max_PCK:.4f}', model)
 
         # Reset meters
         # train_loss_meter_1.reset()
