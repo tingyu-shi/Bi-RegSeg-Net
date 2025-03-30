@@ -138,7 +138,7 @@ def train(args):
             reg_loss.backward()
             optimizer.step()
 
-        # Update lr_scheduler
+        # Update lr
         lr = optimizer.param_groups[0]['lr']
         scheduler.step()
 
