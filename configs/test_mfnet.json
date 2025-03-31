@@ -15,7 +15,7 @@
 
     "#": "dataset resides in memory",
     "in_memory": false,
-    "#": "batch size",
+    "#": "batch size (must is 1)",
     "batch_size": 1,
     "#": "child process used by the data load",
     "num_workers": 4,
@@ -23,7 +23,7 @@
     "gpu": "0",
 
     "#": "the bast checkpoint path",
-    "load_ckpt": "./checkpoints/mfnet/2025-03-20-14-18-11(MFNet-train-Reg)_step_008.pth",
+    "load_ckpt": "./checkpoints/mfnet/2025-03-30-15-40-21(MFNet-train-Reg)_epoch_186_MSE_0.0035_NCC_0.9071_MI_1.2551_PCK_82.6145.pth",
 
     "#": "save predict image",
     "save_image": "./results/mfnet"
