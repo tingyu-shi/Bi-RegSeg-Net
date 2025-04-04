@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # @Time: 2025/3/18 0:29
 # @Author: Tingyu Shi
-# @File: test.py
-# @Description: test.py
+# @File: test_Reg.py
+# @Description: test_Reg
 
 import argparse
 import json
@@ -129,6 +129,11 @@ def test(args):
             flow_path = Path(cfg['save_image']) / 'reg_flow_image'
             save_flow(flow, flow_path, image_name + '.png')
 
+            # Save logs
+            logger.info(
+                image_name+f' -- MSE={test_mse_meter.val:.4f} -- NCC={test_ncc_meter.val:.4f} -- MI={test_mi_meter.val:.4f} -- PCK-5={test_pck_meter.val:.4f}%'
+            )
+
 
 
         # # Update mIoU mAcc
@@ -137,7 +142,7 @@ def test(args):
 
         # Save logs
         logger.info(
-            f'test MSE={test_mse_meter.avg:.4f} NCC={test_ncc_meter.avg:.4f} MI={test_mi_meter.avg:.4f} PCK-5={test_pck_meter.avg:.4f}, '
+            f'test MSE={test_mse_meter.avg:.4f} NCC={test_ncc_meter.avg:.4f} MI={test_mi_meter.avg:.4f} PCK-5={test_pck_meter.avg:.4f}%, '
             # f'test mIoU={mIoU:.4f} mAcc={mAcc:.4f} '
         )
 

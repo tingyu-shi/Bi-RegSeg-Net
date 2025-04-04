@@ -11,7 +11,6 @@ import numpy as np
 from PIL import Image
 import torch
 import torch.utils.data as data
-from torch.utils.tensorboard.summary import image
 from torchvision import transforms
 from data.augmentations import Compose, ColorJitter, RandomCrop, RandomScale, RandomFlip
 

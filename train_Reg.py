@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # @Time: 2025/3/18 0:28
 # @Author: Tingyu Shi
-# @File: train.py
-# @Description: train.py
+# @File: train_Reg.py
+# @Description: train_Reg
 
 import json
 import os
@@ -201,7 +201,7 @@ def train(args):
             # f'train/val loss_SoftCrossEntropy={train_loss_meter_1.avg:.5f}/{val_loss_meter_1.avg:.5f}, '
             # f'train/val loss_LovaszSoftmax={train_loss_meter_2.avg:.5f}/{val_loss_meter_2.avg:.5f}, '
             # f'train/val loss_Dice={train_loss_meter_3.avg:.5f}/{val_loss_meter_3.avg:.5f}, '
-            f'val MSE={MSE:.4f} NCC={NCC:.4f} MI={MI:.4f} PCK-5={PCK:.4f}, '
+            f'val MSE={MSE:.4f} NCC={NCC:.4f} MI={MI:.4f} PCK-5={PCK:.4f}%, '
             # f'val mIoU={mIoU:.4f} mAcc={mAcc:.4f} '
         )
 
