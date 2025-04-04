@@ -6,6 +6,8 @@
     "class_weight": "enet",
     "height": 576,
     "width": 768,
+    "pad_height": 48,
+    "pad_weight": 64,
     "backbone": "vmamba_tiny",
 
     "normalize": false,

@@ -102,7 +102,7 @@ class MFNet_Dataset(data.Dataset):
         vis = Image.open(os.path.join(self.root, 'pad', 'vis', image_name + '.png'))
         ir_pseudo = Image.open(os.path.join(self.root, 'pad', 'ir_pseudo', image_name + '.png'))
         ir_pseudo = ir_pseudo.convert('RGB')
-        label = Image.open(os.path.join(self.root, 'pad', 'label', image_name + '.png'))
+        label = Image.open(os.path.join(self.root, 'labels', image_name + '.png'))
         ir = Image.open(os.path.join(self.root, 'pad', 'ir', image_name + '.png'))
         ir = ir.convert('RGB')
         ir_affine_deform = Image.open(os.path.join(self.root, 'pad', 'ir_affine_deform', image_name + '.png'))

@@ -5,11 +5,13 @@
 # @File: mfnet_in_memory.py
 # @Description: mfnet_in_memory
 import os
+from tkinter import image_names
 
 import numpy as np
 from PIL import Image
 import torch
 import torch.utils.data as data
+from torch.utils.tensorboard.summary import image
 from torchvision import transforms
 from data.augmentations import Compose, ColorJitter, RandomCrop, RandomScale, RandomFlip
 
@@ -73,19 +75,23 @@ class MFNet_Dataset_InMemory(data.Dataset):
 
         # 预加载数据到内存
         self.data_in_memory = []
-        for image_name in self.infos:
-            # 加载图像数据和标签
-            im_the = Image.open(os.path.join(self.root, 'images', image_name + '.png'))
-            im_the = np.asarray(im_the)
-            rgb = Image.fromarray(im_the[:, :, :3])
-            t = Image.fromarray(np.concatenate([im_the[:, :, 3:], im_the[:, :, 3:], im_the[:, :, 3:]], axis=2))
+        for info in self.infos:
+            image_name = info.strip()
+            vis = Image.open(os.path.join(self.root, 'pad', 'vis', image_name + '.png'))
+            ir_pseudo = Image.open(os.path.join(self.root, 'pad', 'ir_pseudo', image_name + '.png'))
+            ir_pseudo = ir_pseudo.convert('RGB')
             label = Image.open(os.path.join(self.root, 'labels', image_name + '.png'))
+            ir = Image.open(os.path.join(self.root, 'pad', 'ir', image_name + '.png'))
+            ir = ir.convert('RGB')
+            ir_affine_deform = Image.open(os.path.join(self.root, 'pad', 'ir_affine_deform', image_name + '.png'))
+            ir_affine_deform = ir_affine_deform.convert('RGB')
 
-            # 存储到内存
             sample = {
-                'rgb': self.im_to_tensor(rgb),
-                't': self.the_to_tensor(t),
-                'label': torch.from_numpy(np.asarray(label, dtype=np.int64)).long(),
+                'vis': self.im_to_tensor(vis),  # [b, c, h, w]
+                'ir_pseudo': self.im_to_tensor(ir_pseudo),  # [b, c, h, w]
+                'ir': self.im_to_tensor(ir),  # [b, c, h, w]
+                'ir_affine_deform': self.im_to_tensor(ir_affine_deform),  # [b, c, h, w]
+                'label': torch.from_numpy(np.asarray(label, dtype=np.int64)).long()  # [b, h, w]
             }
 
             if self.mode == 'train' and self.do_aug:
