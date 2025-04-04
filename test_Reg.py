@@ -142,13 +142,12 @@ def test(args):
 
         # Save logs
         logger.info(
-            f'test MSE={test_mse_meter.avg:.4f} NCC={test_ncc_meter.avg:.4f} MI={test_mi_meter.avg:.4f} PCK-5={test_pck_meter.avg:.4f}%, '
+            f'test average metric: MSE={test_mse_meter.avg:.4f} NCC={test_ncc_meter.avg:.4f} MI={test_mi_meter.avg:.4f} PCK-5={test_pck_meter.avg:.4f}%, '
             # f'test mIoU={mIoU:.4f} mAcc={mAcc:.4f} '
+            f'inference time per image: {time_meter.avg:.4f}s, '
+            f'inference frames per second: {(1/time_meter.avg):.4f}fps'
         )
 
-        print('=' * 10, 'out', '=' * 10)
-        print('inference time per image: %.4f'%time_meter.avg)
-        print('inference fps: %.4f'%(1/time_meter.avg))
         # metrics = test_running_metrics.get_scores()
         # for k, v in metrics[0].items():
         #     print(k, v)
