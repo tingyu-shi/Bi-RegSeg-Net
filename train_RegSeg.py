@@ -80,7 +80,7 @@ def train(args):
     # Define loss
     criterion_1 = LossFunction_Dense().to(device)
     criterion_2 = LovaszSoftmax().to(device)
-    criterion_3 = nn.CrossEntropyLoss().to(device)
+    # criterion_3 = nn.CrossEntropyLoss().to(device)
     criterion_3 = SoftCrossEntropyLoss(smooth_factor=0.1).to(device)
 
     # Define Meters

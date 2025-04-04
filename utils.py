@@ -420,19 +420,19 @@ def flow2rgb(flow_map: [Tensor], max_value: None):
 
 class UNPAD(nn.Module):
 
-    def __init__(self):
+    def __init__(self, unpad_height, unpad_width):
         super(UNPAD, self).__init__()
-        self.pad = nn.ZeroPad2d(padding=(-64, -64, -48, -48))
+        self.unpad = nn.ZeroPad2d(padding=(-unpad_width, -unpad_width, -unpad_height, -unpad_height))
 
     def forward(self, x):
-        x = self.pad(x)
+        x = self.unpad(x)
         return x
 
 class PAD(nn.Module):
 
-    def __init__(self):
+    def __init__(self, pad_height, pad_width):
         super(PAD, self).__init__()
-        self.pad = nn.ZeroPad2d(padding=(64, 64, 48, 48))
+        self.pad = nn.ZeroPad2d(padding=(pad_width, pad_width, pad_height, pad_height))
 
     def forward(self, x):
         x = self.pad(x)

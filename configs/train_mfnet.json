@@ -7,7 +7,7 @@
     "height": 576,
     "width": 768,
     "pad_height": 48,
-    "pad_weight": 64,
+    "pad_width": 64,
     "backbone": "vmamba_tiny",
 
     "normalize": false,
