@@ -1,0 +1,36 @@
+{
+    "mode": "train",
+    "dataset": "FMB",
+    "root": "../../dataset/FMB",
+    "n_classes": 9,
+    "class_weight": "enet",
+    "height": 576,
+    "width": 768,
+    "pad_height": 48,
+    "pad_width": 64,
+    "backbone": "vmamba_tiny",
+
+    "normalize": false,
+    "flip_prob": 0.5,
+    "crop_rate": 0.1,
+    "crop_prob": 1.0,
+
+    "#": "save path for checkpoint",
+    "save_ckpt": "./checkpoints/fmb",
+
+    "#": "dataset resides in memory",
+    "in_memory": false,
+    "#": "batch size",
+    "batch_size": 3,
+    "#": "child process used by the data load",
+    "num_workers": 4,
+    "#": "GPU ID number(s), -1 denote CPU (default: 0), e.g., \"0\" and \"-1\"",
+    "gpu": "0",
+
+    "#": "number of training epochs",
+    "epochs": 500,
+    "#": "learning rate",
+    "lr_start": 1e-4,
+    "lr_decay": 0.99,
+    "weight_decay": 0.01
+}
