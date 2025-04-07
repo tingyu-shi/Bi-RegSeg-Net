@@ -92,8 +92,8 @@ def train(args):
     val_loss_meter_seg_1 = averageMeter()
     train_loss_meter_seg_2 = averageMeter()
     val_loss_meter_seg_2 = averageMeter()
-    # train_loss_meter = averageMeter()
-    # val_loss_meter = averageMeter()
+    train_loss_meter = averageMeter()
+    val_loss_meter = averageMeter()
     val_running_metrics = runningScore(cfg['n_classes'])
     val_mse_meter = averageMeter()
     val_ncc_meter = averageMeter()
@@ -131,15 +131,15 @@ def train(args):
             train_loss_meter_seg_1.update(seg_loss_1.item())
             train_loss_meter_seg_2.update(seg_loss_2.item())
             train_loss_meter_seg.update(seg_loss.item())
-            # loss = 0.5 * seg_loss + 0.5 * reg_loss
+            loss = 0.5 * seg_loss + 0.5 * reg_loss
+            train_loss_meter.update(loss.item())
 
             # Backpropagation and optimize
             optimizer_reg.zero_grad()
-            reg_loss.backward()
             optimizer_reg.step()
             optimizer_seg.zero_grad()
-            seg_loss.backward()
             optimizer_seg.step()
+            loss.backward()
 
         # Update lr
         lr_reg = optimizer_reg.param_groups[0]['lr']
@@ -167,7 +167,8 @@ def train(args):
                 val_loss_meter_seg_1.update(seg_loss_1.item())
                 val_loss_meter_seg_2.update(seg_loss_2.item())
                 val_loss_meter_seg.update(seg_loss.item())
-                # loss = 0.5 * seg_loss + 0.5 * reg_loss
+                loss = 0.5 * seg_loss + 0.5 * reg_loss
+                val_loss_meter.update(loss.item())
 
                 # Metric Acc and IoU
                 predict = out.max(1)[1].cpu().numpy()  # [b, h, w]
@@ -197,6 +198,7 @@ def train(args):
         # Save logs
         logger.info(
             f'Epoch | [{ep + 1:3d}/{cfg["epochs"]}] lr_reg={lr_reg:.12f} lr_seg={lr_seg:.12f}, '
+            f'train/val loss={train_loss_meter.avg:.5f}/{val_loss_meter.avg:.5f}, '
             f'train/val reg_loss={train_loss_meter_reg.avg:.5f}/{val_loss_meter_reg.avg:.5f}, '
             f'train/val seg_loss={train_loss_meter_seg.avg:.5f}/{val_loss_meter_seg.avg:.5f}, '
             f'train/val seg_loss_SoftCrossEntropy={train_loss_meter_seg_1.avg:.5f}/{val_loss_meter_seg_1.avg:.5f}, '
@@ -210,6 +212,8 @@ def train(args):
             'epoch': ep + 1,
             'reg learning rate': lr_reg,
             'seg learning rate': lr_seg,
+            'train loss': train_loss_meter.avg,
+            'val loss': val_loss_meter.avg,
             'train reg_loss': train_loss_meter_reg.avg,
             'val reg_loss': val_loss_meter_reg.avg,
             'train seg_loss': train_loss_meter_seg.avg,
@@ -250,8 +254,8 @@ def train(args):
         val_loss_meter_seg_1.reset()
         train_loss_meter_seg_2.reset()
         val_loss_meter_seg_2.reset()
-        # train_loss_meter.reset()
-        # val_loss_meter.reset()
+        train_loss_meter.reset()
+        val_loss_meter.reset()
         val_running_metrics.reset()
         val_mse_meter.reset()
         val_ncc_meter.reset()
