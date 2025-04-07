@@ -72,7 +72,7 @@ def train(args):
     model.to(device)
 
     # Define optimizer
-    optimizer = torch.optim.AdamW(model.parameters(), lr=cfg['lr_start'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
+    optimizer = torch.optim.AdamW(model.parameters(), lr=cfg['lr_start_reg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
 
     # Define lr scheduling
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=cfg['lr_decay'])
@@ -244,7 +244,7 @@ def train(args):
         #     save_ckpt(cfg['save_ckpt'], logdir.split('/')[-1] + '_epoch_' + f'{ep + 1:03d}' + '_mAcc_' + f'{max_mAcc:.4f}', model)
 
         comparison_results = [MSE <= min_MSE, NCC >= max_NCC, MI >= max_MI, PCK >= max_PCK]
-        if sum(comparison_results) >= 3:
+        if sum(comparison_results) >= 2:
             min_MSE, max_NCC, max_MI, max_PCK = MSE, NCC, MI, PCK
             logger.info(f'Save | save checkpoint {ep + 1}')
             save_ckpt(cfg['save_ckpt'], logdir.split('/')[-1] + '_epoch_' + f'{ep + 1:03d}' + '_MSE_' + f'{min_MSE:.4f}' + '_NCC_' + f'{max_NCC:.4f}' + '_MI_' + f'{max_MI:.4f}' + '_PCK_' + f'{max_PCK:.4f}', model)
