@@ -260,24 +260,24 @@ class RegSeg(nn.Module):
                 from .VMamba.MambaEncoder import vssm_tiny as backbone, fusion_tiny as fusion
             except:
                 from nets.VMamba.MambaEncoder import vssm_tiny as backbone, fusion_tiny as fusion
-            self.backbone = backbone()
-            self.fusion = fusion()
+            self.reg_backbone = backbone()
+            self.seg_fusion = fusion()
             self.channels = [96, 192, 384, 768]
         if cfg['backbone'] == 'vmamba_small':
             try:
                 from .VMamba.MambaEncoder import vssm_small as backbone, fusion_small as fusion
             except:
                 from nets.VMamba.MambaEncoder import vssm_small as backbone, fusion_small as fusion
-            self.backbone = backbone()
-            self.fusion = fusion()
+            self.reg_backbone = backbone()
+            self.seg_fusion = fusion()
             self.channels = [96, 192, 384, 768]
         if cfg['backbone'] == 'vmamba_base':
             try:
                 from .VMamba.MambaEncoder import vssm_base as backbone, fusion_base as fusion
             except:
                 from nets.VMamba.MambaEncoder import vssm_base as backbone, fusion_base as fusion
-            self.backbone = backbone()
-            self.fusion = fusion()
+            self.reg_backbone = backbone()
+            self.seg_fusion = fusion()
             self.channels = [128, 256, 512, 1024]
         self.pad_height = cfg["pad_height"]
         self.pad_width = cfg["pad_width"]
@@ -285,16 +285,16 @@ class RegSeg(nn.Module):
         self.width = cfg["width"]
         self.orisize = [self.height-self.pad_height*2, self.width-self.pad_width*2]
         self.patch_size = 4
-        self.decode_head = MambaDecoder(img_size=[self.height-self.pad_height*2, self.width-self.pad_width*2],
+        self.seg_decode_head = MambaDecoder(img_size=[self.height-self.pad_height*2, self.width-self.pad_width*2],
                                         in_channels=self.channels, num_classes=cfg["n_classes"], embed_dim=self.channels[0])
         self.reg_block = nn.ModuleList()
         for i in range(4):
             self.reg_block.append(
                 RegBlock(self.channels[i] // self.patch_size ** 2, self.channels[i] // self.patch_size ** 2,
                          self.channels[i] // self.patch_size ** 2 * 2))
-        self.transformer = nn.ModuleList()
+        self.reg_transformer = nn.ModuleList()
         for i in range(4):
-            self.transformer.append(SpatialTransformer([s // 2 ** i for s in [self.height, self.width]]))
+            self.reg_transformer.append(SpatialTransformer([s // 2 ** i for s in [self.height, self.width]]))
         self.up_x2 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         # self.up_final = FinalUpsample_X4(dim=self.channels[0])
         # self.up_final = FinalPatchExpand_X4(dim=self.channels[0])
@@ -311,8 +311,8 @@ class RegSeg(nn.Module):
                y: fixed_images, [batch_size, channel=3, H=576, W=768]
                vis: visible_images, [batch_size, channel=3, H=576, W=768]
         """
-        fx1, fx2, fx3, fx4 = self.backbone(x)
-        fy1, fy2, fy3, fy4 = self.backbone(y)
+        fx1, fx2, fx3, fx4 = self.reg_backbone(x)
+        fy1, fy2, fy3, fy4 = self.reg_backbone(y)
 
         # Registration
         # range a
@@ -322,7 +322,7 @@ class RegSeg(nn.Module):
         wx4 = fx4
         flow = self.reg_block[3](wx4, fy4)
         flowall = flow
-        warped_fx4 = self.transformer[3](fx4, flowall)
+        warped_fx4 = self.reg_transformer[3](fx4, flowall)
         warped_fx4 = self.unpad[3](warped_fx4)
         warped_fx4 = warped_fx4.view(B, -1, H-self.pad_height*2//self.patch_size//2**3, W-self.pad_width*2//self.patch_size//2**3)
 
@@ -331,10 +331,10 @@ class RegSeg(nn.Module):
         fx3 = fx3.view(B, -1, self.patch_size * H, self.patch_size * W)
         fy3 = fy3.view(B, -1, self.patch_size * H, self.patch_size * W)
         flowall = self.up_x2(2 * flowall)
-        wx3 = self.transformer[2](fx3, flowall)
+        wx3 = self.reg_transformer[2](fx3, flowall)
         flow = self.reg_block[2](wx3, fy3)
-        flowall = self.transformer[2](flowall, flow) + flow
-        warped_fx3 = self.transformer[2](fx3, flowall)
+        flowall = self.reg_transformer[2](flowall, flow) + flow
+        warped_fx3 = self.reg_transformer[2](fx3, flowall)
         warped_fx3 = self.unpad[2](warped_fx3)
         warped_fx3 = warped_fx3.view(B, -1, H-self.pad_height*2//self.patch_size//2**2, W-self.pad_width*2//self.patch_size//2**2)
 
@@ -343,10 +343,10 @@ class RegSeg(nn.Module):
         fx2 = fx2.view(B, -1, self.patch_size * H, self.patch_size * W)
         fy2 = fy2.view(B, -1, self.patch_size * H, self.patch_size * W)
         flowall = self.up_x2(2 * flowall)
-        wx2 = self.transformer[1](fx2, flowall)
+        wx2 = self.reg_transformer[1](fx2, flowall)
         flow = self.reg_block[1](wx2, fy2)
-        flowall = self.transformer[1](flowall, flow) + flow
-        warped_fx2 = self.transformer[1](fx2, flowall)
+        flowall = self.reg_transformer[1](flowall, flow) + flow
+        warped_fx2 = self.reg_transformer[1](fx2, flowall)
         warped_fx2 = self.unpad[1](warped_fx2)
         warped_fx2 = warped_fx2.view(B, -1, H-self.pad_height*2//self.patch_size//2, W-self.pad_width*2//self.patch_size//2)
 
@@ -355,23 +355,23 @@ class RegSeg(nn.Module):
         fx1 = fx1.view(B, -1, self.patch_size * H, self.patch_size * W)
         fy1 = fy1.view(B, -1, self.patch_size * H, self.patch_size * W)
         flowall = self.up_x2(2 * flowall)
-        wx1 = self.transformer[0](fx1, flowall)
+        wx1 = self.reg_transformer[0](fx1, flowall)
         flow = self.reg_block[0](wx1, fy1)
-        flowall = self.transformer[0](flowall, flow) + flow
-        warped_fx1 = self.transformer[0](fx1, flowall)
+        flowall = self.reg_transformer[0](flowall, flow) + flow
+        warped_fx1 = self.reg_transformer[0](fx1, flowall)
         warped_fx1 = self.unpad[0](warped_fx1)
         warped_fx1 = warped_fx1.view(B, -1, H-self.pad_height*2//self.patch_size, W-self.pad_width*2//self.patch_size)
 
-        warped_x = self.transformer[0](x, flowall)
-        rewarped_y = self.transformer[0](y, -flowall)
+        warped_x = self.reg_transformer[0](x, flowall)
+        rewarped_y = self.reg_transformer[0](y, -flowall)
 
         ir = [warped_fx1, warped_fx2, warped_fx3, warped_fx4]
         vis = self.unpad[0](vis)
-        vis = self.backbone(vis)
+        vis = self.reg_backbone(vis)
 
         # Segmentation
-        x = self.fusion(vis, ir)
-        out = self.decode_head.forward(x)
+        x = self.seg_fusion(vis, ir)
+        out = self.seg_decode_head.forward(x)
         seg_out = F.interpolate(out, size=self.orisize, mode='bilinear', align_corners=False)
 
         return warped_x, rewarped_y, flowall, seg_out
@@ -389,5 +389,7 @@ if __name__ == '__main__':
     ir_pseudo = torch.randn(num_minibatch, 3, 576, 768).cuda()
     vis = torch.randn(num_minibatch, 3, 576, 768).cuda()
     model = RegSeg(cfg).cuda(0)
+    for n, p in model.named_parameters():
+        print(n)
     warped_moving_ir, rewarped_fixed_ir_pseudo, flow, set_out = model(ir_affine_deform, ir_pseudo, vis)
     print('end')

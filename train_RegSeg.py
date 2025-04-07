@@ -71,6 +71,10 @@ def train(args):
     model = RegSeg(cfg)
     model.to(device)
 
+    # Optimizers with parameter groups
+    reg_params = [p for n, p in model.named_parameters() if 'reg_' in n]
+    seg_params = [p for n, p in model.named_parameters() if 'seg_' in n]
+
     # Define optimizer
     optimizer_reg = torch.optim.AdamW(model.parameters(), lr=cfg['lr_start_reg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
     optimizer_seg = torch.optim.AdamW(model.parameters(), lr=cfg['lr_start_seg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
@@ -234,7 +238,7 @@ def train(args):
         os.makedirs(cfg['save_ckpt'], exist_ok=True)
 
         comparison_results = [MSE <= min_MSE, NCC >= max_NCC, MI >= max_MI, PCK >= max_PCK]
-        if sum(comparison_results) >= 2:
+        if sum(comparison_results) >= 3:
             min_MSE, max_NCC, max_MI, max_PCK = MSE, NCC, MI, PCK
             logger.info(f'Save | save checkpoint {ep + 1}')
             save_ckpt(cfg['save_ckpt'], logdir.split('/')[-1] + '_epoch_' + f'{ep + 1:03d}' + '_MSE_' + f'{min_MSE:.4f}' + '_NCC_' + f'{NCC:.4f}' + '_MI_' + f'{MI:.4f}' + '_PCK_' + f'{PCK:.4f}' + '_mIoU_' + f'{mIoU:.4f}' + '_mAcc_' + f'{mAcc:.4f}', model)
