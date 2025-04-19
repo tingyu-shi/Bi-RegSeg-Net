@@ -30,10 +30,8 @@ def test(args):
     """
     # torch.cuda.set_per_process_memory_fraction(1.0, 0)
     # Loading configs
-    cfg = None
     with open(args.config, 'r') as fp:
         cfg = json.load(fp)
-    assert cfg is not None
     cfg['batch_size'] = 1
 
     # Config logs
