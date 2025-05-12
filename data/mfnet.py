@@ -100,7 +100,7 @@ class MFNet_Dataset(data.Dataset):
         image_name = self.infos[index].strip()
 
         vis = Image.open(os.path.join(self.root, 'pad', 'vis', image_name + '.png'))
-        ir_pseudo = Image.open(os.path.join(self.root, 'pad', 'ir_pseudo', image_name + '.png'))
+        ir_pseudo = Image.open(os.path.join(self.root, 'pad', 'ir_pseudo_stylebooth', image_name + '.png'))
         ir_pseudo = ir_pseudo.convert('RGB')
         label = Image.open(os.path.join(self.root, 'labels', image_name + '.png'))
         ir = Image.open(os.path.join(self.root, 'pad', 'ir', image_name + '.png'))
