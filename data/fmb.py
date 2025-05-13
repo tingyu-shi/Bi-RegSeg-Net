@@ -33,19 +33,21 @@ class FMB_Dataset(data.Dataset):
         self.mode = mode
         assert self.mode in ['train', 'test'], f'{self.mode} not support.'
         self.do_aug = do_aug
+        self.mean = cfg['mean']
+        self.std = cfg['std']
 
         ## pre-processing
         # Image preprocessing, convert image to tensor and normalize
         if cfg['normalize']:
             self.im_to_tensor = transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                transforms.Normalize(self.mean, self.std)
                 # transforms.Normalize([0.47112003, 0.46897992, 0.45965695], [0.17483631, 0.17371644, 0.18179253])
             ])
             # Thermal image preprocessing, convert image to tensor and normalize
             self.the_to_tensor = transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Normalize([0.449, 0.449, 0.449], [0.226, 0.226, 0.226])
+                transforms.Normalize(self.mean, self.std)
                 # transforms.Normalize([0.30886722, 0.30886722, 0.30886722], [0.19067425, 0.19067425, 0.19067425])
             ])
         else:

@@ -23,19 +23,21 @@ class MFNet_Dataset_InMemory(data.Dataset):
         self.mode = mode
         assert self.mode in ['train', 'val', 'test', 'test_day', 'test_night', 'black_list'], f'{self.mode} not support.'
         self.do_aug = do_aug
+        self.mean = cfg['mean']
+        self.std = cfg['std']
 
         ## pre-processing
         # Transformations for image data
         if cfg['normalize']:
             self.im_to_tensor = transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                transforms.Normalize(self.mean, self.std)
                 # transforms.Normalize([0.23584902, 0.26904956, 0.23294316], [0.23274839, 0.23397096, 0.23796114])
             ])
             # Transformations for thermal data
             self.the_to_tensor = transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Normalize([0.449, 0.449, 0.449], [0.226, 0.226, 0.226])
+                transforms.Normalize(self.mean, self.std)
                 # transforms.Normalize([0.34428293, 0.34428293, 0.34428293], [0.16110095, 0.16110095, 0.16110095])
             ])
         else:
