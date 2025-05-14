@@ -188,7 +188,7 @@ class Reg(nn.Module):
         flowall = self.up_x2(2 * flowall)
         wx3 = self.reg_transformer[2](fx3, flowall)
         flow = self.reg_block[2](wx3, fy3)
-        flowall = self.reg_transformer[2](flowall, flow) + flow
+        flowall = self.reg_transformer[2](flowall, flow)
         # warped_fx3 = self.transformer[0](fx3, flowall)
         # rewarped_fy3 = self.transformer[0](fy3, -flowall)
         # fx3 = fx3.view(B, -1, H // self.patch_size, W // self.patch_size)
@@ -202,7 +202,7 @@ class Reg(nn.Module):
         flowall = self.up_x2(2 * flowall)
         wx2 = self.reg_transformer[1](fx2, flowall)
         flow = self.reg_block[1](wx2, fy2)
-        flowall = self.reg_transformer[1](flowall, flow) + flow
+        flowall = self.reg_transformer[1](flowall, flow)
         # warped_fx2 = self.transformer[0](fx2, flowall)
         # rewarped_fy2 = self.transformer[0](fy2, -flowall)
         # fx2 = fx2.view(B, -1, H // self.patch_size, W // self.patch_size)
@@ -216,7 +216,7 @@ class Reg(nn.Module):
         flowall = self.up_x2(2 * flowall)
         wx1 = self.reg_transformer[0](fx1, flowall)
         flow = self.reg_block[0](wx1, fy1)
-        flowall = self.reg_transformer[0](flowall, flow) + flow
+        flowall = self.reg_transformer[0](flowall, flow)
         # warped_fx1 = self.transformer[0](fx1, flowall)
         # rewarped_fy1 = self.transformer[0](fy1, -flowall)
         # fx1 = fx1.view(B, -1, H // self.patch_size, W // self.patch_size)
@@ -313,7 +313,7 @@ class RegSeg(nn.Module):
         flowall = self.up_x2(2 * flowall)
         wx3 = self.reg_transformer[2](fx3, flowall)
         flow = self.reg_block[2](wx3, fy3)
-        flowall = self.reg_transformer[2](flowall, flow) + flow
+        flowall = self.reg_transformer[2](flowall, flow)
         warped_fx3 = self.reg_transformer[2](fx3, flowall)
         warped_fx3 = self.unpad[2](warped_fx3)
         warped_fx3 = warped_fx3.view(B, -1, H-self.pad_height*2//self.patch_size//2**2, W-self.pad_width*2//self.patch_size//2**2)
@@ -325,7 +325,7 @@ class RegSeg(nn.Module):
         flowall = self.up_x2(2 * flowall)
         wx2 = self.reg_transformer[1](fx2, flowall)
         flow = self.reg_block[1](wx2, fy2)
-        flowall = self.reg_transformer[1](flowall, flow) + flow
+        flowall = self.reg_transformer[1](flowall, flow)
         warped_fx2 = self.reg_transformer[1](fx2, flowall)
         warped_fx2 = self.unpad[1](warped_fx2)
         warped_fx2 = warped_fx2.view(B, -1, H-self.pad_height*2//self.patch_size//2, W-self.pad_width*2//self.patch_size//2)
@@ -337,7 +337,7 @@ class RegSeg(nn.Module):
         flowall = self.up_x2(2 * flowall)
         wx1 = self.reg_transformer[0](fx1, flowall)
         flow = self.reg_block[0](wx1, fy1)
-        flowall = self.reg_transformer[0](flowall, flow) + flow
+        flowall = self.reg_transformer[0](flowall, flow)
         warped_fx1 = self.reg_transformer[0](fx1, flowall)
         warped_fx1 = self.unpad[0](warped_fx1)
         warped_fx1 = warped_fx1.view(B, -1, H-self.pad_height*2//self.patch_size, W-self.pad_width*2//self.patch_size)
