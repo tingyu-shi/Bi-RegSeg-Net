@@ -11,8 +11,8 @@
     "backbone": "vmamba_tiny",
 
     "normalize": false,
-    "mean": [0.485, 0.456, 0.406],
-    "std": [0.229, 0.224, 0.225],
+    "mean": [0.4, 0.4, 0.4],
+    "std": [0.2, 0.2, 0.2],
     "flip_prob": 0.5,
     "crop_rate": 0.1,
     "crop_prob": 1.0,
