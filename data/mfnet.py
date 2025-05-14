@@ -40,17 +40,8 @@ class MFNet_Dataset(data.Dataset):
                 transforms.Normalize(self.mean, self.std)
                 # transforms.Normalize([0.23584902, 0.26904956, 0.23294316], [0.23274839, 0.23397096, 0.23796114])
             ])
-            # Transformations for thermal data
-            self.the_to_tensor = transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Normalize(self.mean, self.std)
-                # transforms.Normalize([0.34428293, 0.34428293, 0.34428293], [0.16110095, 0.16110095, 0.16110095])
-            ])
         else:
             self.im_to_tensor = transforms.Compose([
-                transforms.ToTensor()
-            ])
-            self.the_to_tensor = transforms.Compose([
                 transforms.ToTensor()
             ])
 

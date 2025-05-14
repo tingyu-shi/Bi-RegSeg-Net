@@ -35,17 +35,8 @@ class FMB_Dataset_InMemory(data.Dataset):
                 transforms.Normalize(self.mean, self.std)
                 # transforms.Normalize([0.47112003, 0.46897992, 0.45965695], [0.17483631, 0.17371644, 0.18179253])
             ])
-            # Thermal image preprocessing, convert image to tensor and normalize
-            self.the_to_tensor = transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Normalize(self.mean, self.std)
-                # transforms.Normalize([0.30886722, 0.30886722, 0.30886722], [0.19067425, 0.19067425, 0.19067425])
-            ])
         else:
             self.im_to_tensor = transforms.Compose([
-                transforms.ToTensor()
-            ])
-            self.the_to_tensor = transforms.Compose([
                 transforms.ToTensor()
             ])
 
