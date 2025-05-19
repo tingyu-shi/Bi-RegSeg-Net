@@ -437,3 +437,17 @@ class PAD(nn.Module):
     def forward(self, x):
         x = self.pad(x)
         return x
+
+class UnNormalize(nn.Module):
+    """反归一化
+       :param x: tensor image of size (B,C,H,W) to be un-normalized
+       :return: UnNormalized image
+    """
+    def __init__(self, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+        super(UnNormalize, self).__init__()
+        self.register_buffer('mean', torch.tensor(mean, dtype=torch.float32).view(1, -1, 1, 1))
+        self.register_buffer('std', torch.tensor(std, dtype=torch.float32).view(1, -1, 1, 1))
+
+    def forward(self, x):
+        x = (x * self.std) + self.mean
+        return torch.clip(x,0,None)

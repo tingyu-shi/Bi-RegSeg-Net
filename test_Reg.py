@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader
 
 from metrics import averageMeter, runningScore, reg_metric
 from nets.model import Reg
-from utils import get_logger, get_test_dataset, load_ckpt, imsave, save_flow
+from utils import get_logger, get_test_dataset, load_ckpt, imsave, save_flow, UnNormalize
 
 
 def test(args):
@@ -72,6 +72,9 @@ def test(args):
     test_pck_meter = averageMeter()
     time_meter = averageMeter()
 
+    # Define UnNormalize
+    unnorm = UnNormalize(mean=cfg['mean'], std=cfg['std']).to(device)
+
     # Make Dirs
     os.makedirs(os.path.join(cfg['save_image'], 'reg_flow_disp'), exist_ok=True)
     os.makedirs(os.path.join(cfg['save_image'], 'reg_flow_image'), exist_ok=True)
@@ -105,6 +108,9 @@ def test(args):
             # test_running_metrics.update(label, predict)
 
             # Metric MSE, NCC, MI and PCK
+            if cfg['normalize']:
+                ir = unnorm(ir)
+                warped_moving_ir = unnorm(warped_moving_ir)
             ir = ir[:, 0:1, :, :]
             warped_moving_ir = warped_moving_ir[:, 0:1, :, :]
             warped_moving_ir = (torch.round(warped_moving_ir * 255.).type(torch.FloatTensor) / 255.).to(device)

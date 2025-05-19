@@ -21,7 +21,7 @@ from losses.losses import LovaszSoftmax, LossFunction_Dense
 from losses.soft_ce_loss import SoftCrossEntropyLoss
 from metrics import averageMeter, runningScore, reg_metric
 from nets.model import RegSeg
-from utils import get_train_val_dataset, save_ckpt, get_logger
+from utils import get_train_val_dataset, save_ckpt, get_logger, UnNormalize
 
 
 def train(args):
@@ -112,6 +112,9 @@ def train(args):
     max_MI = 0
     max_PCK = 0
 
+    # Define UnNormalize
+    unnorm = UnNormalize(mean=cfg['mean'], std=cfg['std']).to(device)
+
     for ep in range(cfg['epochs']):
         # Train
         model.train()
@@ -198,6 +201,9 @@ def train(args):
                 val_running_metrics.update(label, predict)
 
                 # Metric MSE, NCC, MI and PCK
+                if cfg['normalize']:
+                    ir = unnorm(ir)
+                    warped_moving_ir = unnorm(warped_moving_ir)
                 ir = ir[:, 0:1, :, :]
                 warped_moving_ir = warped_moving_ir[:, 0:1, :, :]
                 warped_moving_ir = (torch.round(warped_moving_ir * 255.).type(torch.FloatTensor) / 255.).to(device)
