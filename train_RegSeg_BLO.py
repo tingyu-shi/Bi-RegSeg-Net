@@ -21,7 +21,7 @@ from losses.losses import LovaszSoftmax, LossFunction_Dense
 from losses.soft_ce_loss import SoftCrossEntropyLoss
 from metrics import averageMeter, runningScore, reg_metric
 from nets.model import RegSeg
-from utils import get_train_val_dataset, save_ckpt, get_logger, UnNormalize
+from utils import get_train_val_dataset, save_ckpt, get_logger, UnNormalize, load_ckpt
 
 
 def train(args):
@@ -68,6 +68,11 @@ def train(args):
     # Prepare the model
     model = RegSeg(cfg)
     model.to(device)
+
+    # Load pretrained model
+    # if cfg['load_ckpt']:
+    #     logger.info(f'Load | load pretrained model {cfg["load_ckpt"]}')
+    #     load_ckpt(cfg['load_ckpt'], model, cfg['gpu'])
 
     # Optimizers with parameter groups
     reg_params = [p for n, p in model.named_parameters() if 'reg_' in n]
