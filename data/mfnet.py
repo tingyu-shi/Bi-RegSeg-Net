@@ -82,7 +82,7 @@ class MFNet_Dataset(data.Dataset):
 
         # Load all images' name from a text file based on the mode
         if self.mode == 'train':
-            with open(os.path.join(self.root, f'train+val.txt'), 'r') as f:
+            with open(os.path.join(self.root, 'train+val.txt'), 'r') as f:
                 self.infos = f.readlines()
                 # Remove '_flip' suffix from image names
                 self.infos = [info for info in self.infos if not info.endswith('_flip\n')]

@@ -62,7 +62,7 @@ class MFNet_Dataset_InMemory(data.Dataset):
 
         # 加载文件名
         if self.mode == 'train':
-            with open(os.path.join(self.root, f'train+val.txt'), 'r') as f:
+            with open(os.path.join(self.root, 'train+val.txt'), 'r') as f:
                 self.infos = [line.strip() for line in f.readlines() if not line.endswith('_flip\n')]
         else:
             with open(os.path.join(self.root, f'{self.mode}.txt'), 'r') as f:
