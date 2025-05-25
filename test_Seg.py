@@ -12,12 +12,13 @@ import argparse
 import shutil
 import time
 
+import cv2
 import torch
 from torch.utils.data import DataLoader
 
 from metrics import averageMeter, runningScore
 from nets.model import Reg, Seg
-from utils import get_logger, get_test_dataset, load_ckpt
+from utils import get_logger, get_test_dataset, load_ckpt, class_to_RGB
 
 
 def test(args):
@@ -69,12 +70,12 @@ def test(args):
     # Make Dirs
     os.makedirs(os.path.join(cfg['save_image'], 'reg_flow_disp'), exist_ok=True)
     os.makedirs(os.path.join(cfg['save_image'], 'reg_flow_image'), exist_ok=True)
-    os.makedirs(os.path.join(cfg['save_image'], 'ir_affine_deform_reg'), exist_ok=True)
 
     # Test
     with torch.no_grad():
         model.eval()
         for i, sample in enumerate(test_loader):
+            image_name = sample[0][0]
             sample = sample[1]
             vis = sample['vis'].to(device)
             ir = sample['ir'].to(device)
@@ -89,6 +90,11 @@ def test(args):
             predict = out.max(1)[1].cpu().numpy()  # [b, h, w]
             label = label.cpu().numpy()
             test_running_metrics.update(label, predict)
+
+            # Save predict images
+            predict_RGB = class_to_RGB(predict[0], cfg['n_classes'], test_set.cmap)
+            cv2.imwrite(os.path.join(cfg['save_image'], 'predict', image_name + '.png'), predict[0])
+            cv2.imwrite(os.path.join(cfg['save_image'], 'predict_rgb', image_name + '.png'), predict_RGB[:, :, ::-1])
 
         # Update mIoU mAcc
         mIoU = test_running_metrics.get_scores()[0]['Mean IoU: ']

@@ -5,7 +5,6 @@
 # @File: test_Reg.py
 # @Description: test_Reg
 
-import argparse
 import json
 import os
 import argparse
@@ -13,13 +12,14 @@ import shutil
 import time
 from pathlib import Path
 
+import cv2
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
 from metrics import averageMeter, runningScore, reg_metric
 from nets.model import RegSeg
-from utils import get_logger, get_test_dataset, load_ckpt, imsave, save_flow, UnNormalize
+from utils import get_logger, get_test_dataset, load_ckpt, imsave, save_flow, UnNormalize, class_to_RGB
 
 
 def test(args):
@@ -96,9 +96,7 @@ def test(args):
 
             # Metric time
             time_start = time.time()
-
             warped_moving_ir, rewarped_fixed_ir_pseudo, flow, out = model(ir_affine_deform, ir_pseudo, vis)
-
             time_meter.update(time.time() - time_start, cfg['batch_size'])
 
             # Metric Acc and IoU
@@ -119,6 +117,12 @@ def test(args):
             test_mi_meter.update(np.mean(mi_values), n=cfg['batch_size'])
             test_pck_meter.update(np.mean(pck_values), n=cfg['batch_size'])
 
+
+            # Save predict images
+            predict_RGB = class_to_RGB(predict[0], cfg['n_classes'], test_set.cmap)
+            cv2.imwrite(os.path.join(cfg['save_image'], 'predict', image_name + '.png'), predict[0])
+            cv2.imwrite(os.path.join(cfg['save_image'], 'predict_rgb', image_name + '.png'), predict_RGB[:, :, ::-1])
+
             # Save registrated ir_affine_deform
             warped_moving_ir_path = Path(cfg['save_image']) / 'ir_affine_deform_reg'
             imsave(warped_moving_ir, warped_moving_ir_path, image_name + '.png')
@@ -136,8 +140,6 @@ def test(args):
             logger.info(
                 image_name+f' -- MSE={test_mse_meter.val:.4f} -- NCC={test_ncc_meter.val:.4f} -- MI={test_mi_meter.val:.4f} -- PCK-5={test_pck_meter.val:.4f}%'
             )
-
-
 
         # Update mIoU mAcc
         mIoU = test_running_metrics.get_scores()[0]['Mean IoU: ']
