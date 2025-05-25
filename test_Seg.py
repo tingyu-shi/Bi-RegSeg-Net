@@ -82,7 +82,7 @@ def test(args):
 
             # Metric time
             time_start = time.time()
-            warped_moving_ir, out = model(ir, vis)
+            out = model(ir, vis)
             time_meter.update(time.time() - time_start, cfg['batch_size'])
 
             # Metric Acc and IoU

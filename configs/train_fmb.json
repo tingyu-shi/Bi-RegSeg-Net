@@ -21,7 +21,7 @@
 
     "#": "save path for checkpoint",
     "save_ckpt": "./checkpoints/fmb",
-      "#": "load path for checkpoint",
+    "#": "load path for checkpoint",
     "load_ckpt": "./checkpoints/fmb/2025-05-20-14-52-02(FMB-train-Reg)_epoch_350_MSE_0.0011_NCC_0.9873_MI_2.2285_PCK_89.1576.pth",
 
     "#": "dataset resides in memory",

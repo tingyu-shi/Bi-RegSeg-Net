@@ -97,7 +97,7 @@ def train(args):
             vis = sample['vis'].to(device)
             ir = sample['ir'].to(device)
             label = sample['label'].to(device)
-            warped_moving_ir, out = model(ir, vis)
+            out = model(ir, vis)
 
             # Update loss
             seg_loss_1 = criterion_seg_1(out, label)
@@ -124,7 +124,7 @@ def train(args):
                 vis = sample['vis'].to(device)
                 ir = sample['ir'].to(device)
                 label = sample['label'].to(device)
-                warped_moving_ir, out = model(ir, vis)
+                out = model(ir, vis)
 
                 # Update loss
                 seg_loss_1 = criterion_seg_1(out, label)

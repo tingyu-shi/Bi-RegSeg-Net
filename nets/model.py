@@ -413,7 +413,6 @@ class Seg(nn.Module):
                ir: infrared_images, [batch_size, channel=3, H=576, W=768]
                vis: visible_images, [batch_size, channel=3, H=576, W=768]
         """
-        warped_moving_ir = ir
         ir = self.unpad[0](ir)
         ir = self.reg_seg_backbone(ir)
         vis = self.unpad[0](vis)
@@ -424,7 +423,7 @@ class Seg(nn.Module):
         out = self.seg_decode_head.forward(x)
         out = F.interpolate(out, size=self.orisize, mode='bilinear', align_corners=False)
 
-        return warped_moving_ir, out
+        return out
 
 
 
