@@ -65,22 +65,15 @@ def test(args):
     model.to(device)
 
     # Define Meters
-    test_running_metrics = runningScore(cfg['n_classes'])
     test_mse_meter = averageMeter()
     test_ncc_meter = averageMeter()
     test_mi_meter = averageMeter()
     test_pck_meter = averageMeter()
     time_meter = averageMeter()
 
-    # Define UnNormalize
-    unnorm = UnNormalize(mean=cfg['mean'], std=cfg['std']).to(device)
-
     # Make Dirs
-    os.makedirs(os.path.join(cfg['save_image'], 'reg_flow_disp'), exist_ok=True)
-    os.makedirs(os.path.join(cfg['save_image'], 'reg_flow_image'), exist_ok=True)
-    os.makedirs(os.path.join(cfg['save_image'], 'ir_affine_deform_reg'), exist_ok=True)
-    # os.makedirs(os.path.join(cfg['save_image'], 'predict'), exist_ok=True)
-    # os.makedirs(os.path.join(cfg['save_image'], 'predict_rgb'), exist_ok=True)
+    os.makedirs(os.path.join(cfg['save_image'], 'predict'), exist_ok=True)
+    os.makedirs(os.path.join(cfg['save_image'], 'predict_rgb'), exist_ok=True)
 
     # Test
     with torch.no_grad():
@@ -92,33 +85,11 @@ def test(args):
             ir = sample['ir'].to(device)
             ir_affine_deform = sample['ir_affine_deform'].to(device)
             ir_pseudo = sample['ir_pseudo'].to(device)
-            label = sample['label'].to(device)
 
             # Metric time
             time_start = time.time()
-
             warped_moving_ir, rewarped_fixed_ir_pseudo, flow = model(ir_affine_deform, ir_pseudo, vis)
-            # out = model(rgb, modal_x)
-
             time_meter.update(time.time() - time_start, cfg['batch_size'])
-
-            # # Metric Acc and IoU
-            # predict = out.max(1)[1].cpu().numpy()  # [b, h, w]
-            # label = label.cpu().numpy()
-            # test_running_metrics.update(label, predict)
-
-            # Metric MSE, NCC, MI and PCK
-            if cfg['normalize']:
-                ir = unnorm(ir)
-                warped_moving_ir = unnorm(warped_moving_ir)
-            ir = ir[:, 0:1, :, :]
-            warped_moving_ir = warped_moving_ir[:, 0:1, :, :]
-            warped_moving_ir = (torch.round(warped_moving_ir * 255.).type(torch.FloatTensor) / 255.).to(device)
-            mse_values, ncc_values, mi_values, pck_values = reg_metric(ir, warped_moving_ir, device)
-            test_mse_meter.update(np.mean(mse_values), n=cfg['batch_size'])
-            test_ncc_meter.update(np.mean(ncc_values), n=cfg['batch_size'])
-            test_mi_meter.update(np.mean(mi_values), n=cfg['batch_size'])
-            test_pck_meter.update(np.mean(pck_values), n=cfg['batch_size'])
 
             # Save registrated ir_affine_deform
             warped_moving_ir_path = Path(cfg['save_image']) / 'ir_affine_deform_reg'
@@ -138,29 +109,12 @@ def test(args):
                 image_name+f' -- MSE={test_mse_meter.val:.4f} -- NCC={test_ncc_meter.val:.4f} -- MI={test_mi_meter.val:.4f} -- PCK-5={test_pck_meter.val:.4f}%'
             )
 
-
-
-        # # Update mIoU mAcc
-        # mIoU = test_running_metrics.get_scores()[0]['Mean IoU: ']
-        # mAcc = test_running_metrics.get_scores()[0]['Mean Acc: ']
-
         # Save logs
         logger.info(
-            f'test average metric: MSE={test_mse_meter.avg:.4f} NCC={test_ncc_meter.avg:.4f} MI={test_mi_meter.avg:.4f} PCK-5={test_pck_meter.avg:.4f}%, '
-            # f'test mIoU={mIoU:.4f} mAcc={mAcc:.4f} '
+            f'test average reg metric: MSE={test_mse_meter.avg:.4f} NCC={test_ncc_meter.avg:.4f} MI={test_mi_meter.avg:.4f} PCK-5={test_pck_meter.avg:.4f}%, '
             f'inference time per image: {time_meter.avg:.4f}s, '
             f'inference frames per second: {(1/time_meter.avg):.4f}fps'
         )
-
-        # metrics = test_running_metrics.get_scores()
-        # for k, v in metrics[0].items():
-        #     print(k, v)
-        # print('Class Acc:')
-        # for k, v in metrics[1].items():
-        #     print(k, v)
-        # print('Class IoU:')
-        # for k, v in metrics[2].items():
-        #     print(k, v)
 
 if __name__ == '__main__':
 

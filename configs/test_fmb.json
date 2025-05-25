@@ -1,13 +1,13 @@
 {
     "mode": "test",
     "dataset": "FMB",
-    "root": "../../dataset/FMB",
+    "root": "../../dataset/FLIR",
     "n_classes": 9,
     "class_weight": "enet",
     "height": 576,
     "width": 768,
     "pad_height": 48,
-    "pad_weight": 64,
+    "pad_width": 64,
     "backbone": "vmamba_tiny",
 
     "normalize": false,
@@ -27,7 +27,7 @@
     "gpu": "0",
 
     "#": "the bast checkpoint path",
-    "load_ckpt": "./checkpoints/fmb/2025-04-05-00-07-40(FMB-train-Reg)_epoch_222_MSE_0.0011_NCC_0.9864_MI_2.2591_PCK_89.6418.pth",
+    "load_ckpt": "./checkpoints/fmb/2025-05-20-14-52-02(FMB-train-Reg)_epoch_350_MSE_0.0011_NCC_0.9873_MI_2.2285_PCK_89.1576.pth",
 
     "#": "save predict image",
     "save_image": "./results/fmb"

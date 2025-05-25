@@ -21,7 +21,7 @@ from losses.losses import LovaszSoftmax, LossFunction_Dense
 from losses.soft_ce_loss import SoftCrossEntropyLoss
 from metrics import averageMeter, runningScore, reg_metric
 from nets.model import RegSeg
-from utils import get_train_val_dataset, save_ckpt, get_logger, UnNormalize
+from utils import get_train_val_dataset, save_ckpt, get_logger, UnNormalize, load_ckpt
 
 
 def train(args):
@@ -69,13 +69,18 @@ def train(args):
     model = RegSeg(cfg)
     model.to(device)
 
+    # Load pretrained model
+    # if cfg['load_ckpt']:
+    #     logger.info(f'Load | load pretrained model {cfg["load_ckpt"]}')
+    #     load_ckpt(cfg['load_ckpt'], model, cfg['gpu'])
+
     # Optimizers with parameter groups
     reg_params = [p for n, p in model.named_parameters() if 'reg_' in n]
     seg_params = [p for n, p in model.named_parameters() if 'seg_' in n]
 
     # Define optimizer
-    reg_optimizer = torch.optim.AdamW(model.parameters(), lr=cfg['lr_start_reg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
-    seg_optimizer = torch.optim.AdamW(model.parameters(), lr=cfg['lr_start_seg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
+    reg_optimizer = torch.optim.AdamW(reg_params, lr=cfg['lr_start_reg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
+    seg_optimizer = torch.optim.AdamW(seg_params, lr=cfg['lr_start_seg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
 
     # Define lr scheduling
     scheduler = torch.optim.lr_scheduler.ExponentialLR(seg_optimizer, gamma=cfg['lr_decay'])
@@ -128,48 +133,29 @@ def train(args):
             warped_moving_ir, rewarped_fixed_ir_pseudo, flow, out = model(ir_affine_deform, ir_pseudo, vis)
 
             # Update loss
-            # Upper loss
             reg_loss, _, _, _ = criterion_reg(warped_moving_ir, rewarped_fixed_ir_pseudo, ir_pseudo, ir_affine_deform, flow)
             train_loss_meter_reg.update(reg_loss.item())
-            reg_optimizer.zero_grad()
-            reg_optimizer.step()
-            reg_loss.backward()
-            # Lower loss
             seg_loss_1 = criterion_seg_1(out, label)
             seg_loss_2 = criterion_seg_2(out, label)
             reg_seg_loss = 0.5 * seg_loss_1 + 0.5 * seg_loss_2
-            grad_reg = torch.autograd.grad(reg_loss, seg_params, retain_graph=True)
-            grad_seg = torch.autograd.grad(reg_seg_loss, seg_params, retain_graph=True)
-            grese = 0
-            gsese = 0
-            for rs, ss in zip(grad_reg, grad_seg):
-                grese += torch.sum(rs * ss)
-                gsese += torch.sum(ss * ss)
-            gre_loss = - grese.detach() / gsese.detach() * reg_seg_loss
-            reg_grad = torch.autograd.grad(reg_loss + gre_loss, reg_params)
-            for p, t in zip(reg_grad, reg_params):
-                if t.grad is not None:
-                    t.grad += p
-                else:
-                    t.grad = p
-            reg_optimizer.step()
             train_loss_meter_seg_1.update(seg_loss_1.item())
             train_loss_meter_seg_2.update(seg_loss_2.item())
             train_loss_meter_seg.update(reg_seg_loss.item())
-            loss = 0.5 * reg_loss + 0.5 * reg_seg_loss
+
+            loss = reg_loss + reg_seg_loss
             train_loss_meter.update(loss.item())
 
             # Backpropagation and optimize
             reg_optimizer.zero_grad()
-            reg_optimizer.step()
             seg_optimizer.zero_grad()
-            seg_optimizer.step()
             loss.backward()
+            reg_optimizer.step()
+            seg_optimizer.step()
 
         # Update lr
         lr_reg = reg_optimizer.param_groups[0]['lr']
         lr_seg = seg_optimizer.param_groups[0]['lr']
-        # scheduler.step()
+        scheduler.step()
 
         # Val
         with torch.no_grad():
@@ -185,14 +171,15 @@ def train(args):
 
                 # Update loss
                 reg_loss, _, _, _ = criterion_reg(warped_moving_ir, rewarped_fixed_ir_pseudo, ir_pseudo, ir_affine_deform, flow)
-                train_loss_meter_reg.update(reg_loss.item())
+                val_loss_meter_reg.update(reg_loss.item())
                 seg_loss_1 = criterion_seg_1(out, label)
                 seg_loss_2 = criterion_seg_2(out, label)
-                seg_loss = 0.5 * seg_loss_1 + 0.5 * seg_loss_2
+                reg_seg_loss = 0.5 * seg_loss_1 + 0.5 * seg_loss_2
                 val_loss_meter_seg_1.update(seg_loss_1.item())
                 val_loss_meter_seg_2.update(seg_loss_2.item())
-                val_loss_meter_seg.update(seg_loss.item())
-                loss = 0.5 * seg_loss + 0.5 * reg_loss
+                val_loss_meter_seg.update(reg_seg_loss.item())
+
+                loss = reg_loss + reg_seg_loss
                 val_loss_meter.update(loss.item())
 
                 # Metric Acc and IoU

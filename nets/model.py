@@ -238,7 +238,7 @@ class RegSeg(nn.Module):
             except:
                 from nets.VMamba.MambaEncoder import vssm_tiny as backbone, fusion_tiny as fusion
             self.reg_seg_backbone = backbone()
-            self.seg_backbone = backbone()
+            # self.seg_backbone = backbone()
             self.seg_fusion = fusion()
             self.channels = [96, 192, 384, 768]
         if cfg['backbone'] == 'vmamba_small':
@@ -247,7 +247,7 @@ class RegSeg(nn.Module):
             except:
                 from nets.VMamba.MambaEncoder import vssm_small as backbone, fusion_small as fusion
             self.reg_seg_backbone = backbone()
-            self.seg_backbone = backbone()
+            # self.seg_backbone = backbone()
             self.seg_fusion = fusion()
             self.channels = [96, 192, 384, 768]
         if cfg['backbone'] == 'vmamba_base':
@@ -256,7 +256,7 @@ class RegSeg(nn.Module):
             except:
                 from nets.VMamba.MambaEncoder import vssm_base as backbone, fusion_base as fusion
             self.reg_seg_backbone = backbone()
-            self.seg_backbone = backbone()
+            # self.seg_backbone = backbone()
             self.seg_fusion = fusion()
             self.channels = [128, 256, 512, 1024]
         self.pad_height = cfg["pad_height"]
@@ -347,7 +347,7 @@ class RegSeg(nn.Module):
 
         ir = [warped_fx1, warped_fx2, warped_fx3, warped_fx4]
         vis = self.unpad[0](vis)
-        vis = self.seg_backbone(vis)
+        vis = self.reg_seg_backbone(vis)
 
         # Segmentation
         x = self.seg_fusion(vis, ir)
@@ -355,6 +355,76 @@ class RegSeg(nn.Module):
         out = F.interpolate(out, size=self.orisize, mode='bilinear', align_corners=False)
 
         return warped_x, rewarped_y, flowall, out
+
+
+class Seg(nn.Module):
+    def __init__(self, cfg=None):
+        super().__init__()
+        if cfg['backbone'] == 'vmamba_tiny':
+            try:
+                from .VMamba.MambaEncoder import vssm_tiny as backbone, fusion_tiny as fusion
+            except:
+                from nets.VMamba.MambaEncoder import vssm_tiny as backbone, fusion_tiny as fusion
+            self.reg_seg_backbone = backbone()
+            self.seg_fusion = fusion()
+            self.channels = [96, 192, 384, 768]
+        if cfg['backbone'] == 'vmamba_small':
+            try:
+                from .VMamba.MambaEncoder import vssm_small as backbone, fusion_small as fusion
+            except:
+                from nets.VMamba.MambaEncoder import vssm_small as backbone, fusion_small as fusion
+            self.reg_seg_backbone = backbone()
+            self.seg_fusion = fusion()
+            self.channels = [96, 192, 384, 768]
+        if cfg['backbone'] == 'vmamba_base':
+            try:
+                from .VMamba.MambaEncoder import vssm_base as backbone, fusion_base as fusion
+            except:
+                from nets.VMamba.MambaEncoder import vssm_base as backbone, fusion_base as fusion
+            self.reg_seg_backbone = backbone()
+            self.seg_fusion = fusion()
+            self.channels = [128, 256, 512, 1024]
+        self.pad_height = cfg["pad_height"]
+        self.pad_width = cfg["pad_width"]
+        self.height = cfg["height"]
+        self.width = cfg["width"]
+        self.orisize = [self.height-self.pad_height*2, self.width-self.pad_width*2]
+        self.patch_size = 4
+        self.seg_decode_head = MambaDecoder(img_size=[self.height-self.pad_height*2, self.width-self.pad_width*2],
+                                        in_channels=self.channels, num_classes=cfg["n_classes"], embed_dim=self.channels[0])
+        self.reg_block = nn.ModuleList()
+        for i in range(4):
+            self.reg_block.append(
+                RegBlock(self.channels[i] // self.patch_size ** 2, self.channels[i] // self.patch_size ** 2,
+                         self.channels[i] // self.patch_size ** 2 * 2))
+        self.reg_transformer = nn.ModuleList()
+        for i in range(4):
+            self.reg_transformer.append(SpatialTransformer([s // 2 ** i for s in [self.height, self.width]]))
+        self.up_x2 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+        self.unpad = nn.ModuleList()
+        for i in range(4):
+            self.unpad.append(UNPAD(self.pad_height // 2**i, self.pad_width // 2**i))
+
+    def forward(self, ir, vis):
+        """
+           Forward function.
+
+           Parameters:
+               ir: infrared_images, [batch_size, channel=3, H=576, W=768]
+               vis: visible_images, [batch_size, channel=3, H=576, W=768]
+        """
+        warped_moving_ir = ir
+        ir = self.unpad[0](ir)
+        ir = self.reg_seg_backbone(ir)
+        vis = self.unpad[0](vis)
+        vis = self.reg_seg_backbone(vis)
+
+        # Segmentation
+        x = self.seg_fusion(vis, ir)
+        out = self.seg_decode_head.forward(x)
+        out = F.interpolate(out, size=self.orisize, mode='bilinear', align_corners=False)
+
+        return warped_moving_ir, out
 
 
 

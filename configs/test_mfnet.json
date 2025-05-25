@@ -7,7 +7,7 @@
     "height": 576,
     "width": 768,
     "pad_height": 48,
-    "pad_weight": 64,
+    "pad_width": 64,
     "backbone": "vmamba_tiny",
 
     "normalize": false,
@@ -27,7 +27,7 @@
     "gpu": "0",
 
     "#": "the bast checkpoint path",
-    "load_ckpt": "./checkpoints/mfnet/2025-04-02-19-06-19(MFNet-train-Reg)_epoch_466_MSE_0.0005_NCC_0.9857_MI_1.6843_PCK_92.9647.pth",
+    "load_ckpt": "./checkpoints/mfnet/2025-05-13-11-38-04(MFNet-train-Reg)_epoch_484_MSE_0.0004_NCC_0.9884_MI_1.6920_PCK_93.0343.pth",
 
     "#": "save predict image",
     "save_image": "./results/mfnet"

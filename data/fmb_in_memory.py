@@ -58,7 +58,7 @@ class FMB_Dataset_InMemory(data.Dataset):
                 # RandomScale(scale_range),
                 # RandomCrop(crop_size, pad_if_needed=True),
                 RandomFlip(prob=cfg['flip_prob']),
-                RandomCrop(crop_rate=cfg['crop_rate'], prob=cfg['crop_prob']),
+                # RandomCrop(crop_rate=cfg['crop_rate'], prob=cfg['crop_prob']),
             ])
 
         # 加载文件名

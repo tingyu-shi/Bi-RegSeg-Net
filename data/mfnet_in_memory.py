@@ -57,12 +57,16 @@ class MFNet_Dataset_InMemory(data.Dataset):
                 # RandomScale(scale_range),
                 # RandomCrop(crop_size, pad_if_needed=True),
                 RandomFlip(prob=cfg['flip_prob']),
-                RandomCrop(crop_rate=cfg['crop_rate'], prob=cfg['crop_prob']),
+                # RandomCrop(crop_rate=cfg['crop_rate'], prob=cfg['crop_prob']),
             ])
 
         # 加载文件名
-        with open(os.path.join(self.root, f'{self.mode}.txt'), 'r') as f:
-            self.infos = [line.strip() for line in f.readlines() if not line.endswith('_flip\n')]
+        if self.mode == 'train':
+            with open(os.path.join(self.root, f'train+val.txt'), 'r') as f:
+                self.infos = [line.strip() for line in f.readlines() if not line.endswith('_flip\n')]
+        else:
+            with open(os.path.join(self.root, f'{self.mode}.txt'), 'r') as f:
+                self.infos = [line.strip() for line in f.readlines() if not line.endswith('_flip\n')]
 
         # 预加载数据到内存
         self.data_in_memory = []
