@@ -70,9 +70,9 @@ def train(args):
     model.to(device)
 
     # Load pretrained model
-    # if cfg['load_ckpt']:
-    #     logger.info(f'Load | load pretrained model {cfg["load_ckpt"]}')
-    #     load_ckpt(cfg['load_ckpt'], model, cfg['gpu'])
+    if cfg['load_ckpt']:
+        logger.info(f'Load | load pretrained model {cfg["load_ckpt"]}')
+        load_ckpt(cfg['load_ckpt'], model, cfg['gpu'])
 
     # Optimizers with parameter groups
     reg_params = [p for n, p in model.named_parameters() if 'reg_' in n]
