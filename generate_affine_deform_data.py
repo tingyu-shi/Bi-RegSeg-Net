@@ -144,7 +144,7 @@ def imfuse(img1, img2):
     return img_fuse
 
 def get_random_affine_coeff():
-    # TODO: define transformation coefficent
+    # define transformation coefficent
     degree = random.uniform(0, 10) # light_defo: (0, 0); middle_defo: (0, 5); heavy_defo: (0, 10)
     translate = random.uniform(0.02, 0.05) # light_defo: (0.0, 0.01); middle_defo: (0.0, 0.02); heavy_defo: (0.02, 0.05)
     scale = random.uniform(1.0, 1.0)
@@ -158,12 +158,12 @@ def get_random_deformable_coeff():
     return kernel, sigma, alpha
 
 if __name__ == "__main__":
-    # TODO: data path
+    # data path
     ir_path = '../../dataset/MFNet/val_ir'
     ir_folder = pathlib.Path(ir_path)
     ir_list = [x for x in sorted(ir_folder.glob('*')) if x.suffix in ['.png', '.jpg', '.bmp']]
 
-    # TODO: save path
+    # save path
     ir_pad_path = '../../dataset/MFNet/pad/ir'
     ir_affine_deform_path   = '../../dataset/MFNet/pad/ir_affine_deform'
     disp_affine_deform_path = './results/mfnet/disp'
