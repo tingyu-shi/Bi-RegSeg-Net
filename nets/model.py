@@ -238,7 +238,7 @@ class RegSeg(nn.Module):
             except:
                 from nets.VMamba.MambaEncoder import vssm_tiny as backbone, fusion_tiny as fusion
             self.reg_seg_backbone = backbone()
-            # self.seg_backbone = backbone()
+            self.seg_backbone = backbone()
             self.seg_fusion = fusion()
             self.channels = [96, 192, 384, 768]
         if cfg['backbone'] == 'vmamba_small':
@@ -247,7 +247,7 @@ class RegSeg(nn.Module):
             except:
                 from nets.VMamba.MambaEncoder import vssm_small as backbone, fusion_small as fusion
             self.reg_seg_backbone = backbone()
-            # self.seg_backbone = backbone()
+            self.seg_backbone = backbone()
             self.seg_fusion = fusion()
             self.channels = [96, 192, 384, 768]
         if cfg['backbone'] == 'vmamba_base':
@@ -256,7 +256,7 @@ class RegSeg(nn.Module):
             except:
                 from nets.VMamba.MambaEncoder import vssm_base as backbone, fusion_base as fusion
             self.reg_seg_backbone = backbone()
-            # self.seg_backbone = backbone()
+            self.seg_backbone = backbone()
             self.seg_fusion = fusion()
             self.channels = [128, 256, 512, 1024]
         self.pad_height = cfg["pad_height"]
@@ -347,7 +347,7 @@ class RegSeg(nn.Module):
 
         ir = [warped_fx1, warped_fx2, warped_fx3, warped_fx4]
         vis = self.unpad[0](vis)
-        vis = self.reg_seg_backbone(vis)
+        vis = self.seg_backbone(vis)
 
         # Segmentation
         x = self.seg_fusion(vis, ir)
