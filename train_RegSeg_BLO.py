@@ -36,7 +36,7 @@ def train(args):
         cfg = json.load(fp)
 
     # Config logs
-    logdir = f'logs/{time.strftime("%Y-%m-%d-%H-%M-%S")}({cfg["dataset"]}-train-RegSeg)'
+    logdir = f'logs/{time.strftime("%Y-%m-%d-%H-%M-%S")}({cfg["dataset"]}-train-RegSeg-BLO)'
     os.makedirs(logdir, exist_ok=True)
     shutil.copy(args.config, logdir)
 
@@ -45,7 +45,9 @@ def train(args):
     logger.info(f'Conf | use backbone {cfg["backbone"]}')
 
     # Config wandb
-    miya = wandb.init(project='train_RegSeg', config=cfg, resume='allow')
+    # os.environ['WANDB_DISABLED'] = 'true'  # Disable wandb
+    os.environ["WANDB_MODE"] = "offline"  # Set wandb offline (default: online)
+    miya = wandb.init(project='train_RegSeg_BLO', config=cfg, resume='allow')
     miya.config.update(dict(logdir=logdir))
 
     # Handling devices
@@ -70,13 +72,13 @@ def train(args):
     model.to(device)
 
     # Load pretrained model
-    # if cfg['load_ckpt']:
-    #     logger.info(f'Load | load pretrained model {cfg["load_ckpt"]}')
-    #     load_ckpt(cfg['load_ckpt'], model, cfg['gpu'])
+    if cfg['load_ckpt']:
+        logger.info(f'Load | load pretrained model {cfg["load_ckpt"]}')
+        load_ckpt(cfg['load_ckpt'], model, cfg['gpu'])
 
     # Optimizers with parameter groups
     reg_params = [p for n, p in model.named_parameters() if 'reg_' in n]
-    seg_params = [p for n, p in model.named_parameters() if 'seg_' in n]
+    seg_params = [p for n, p in model.named_parameters() if 'seg_' in n and 'reg_' not in n] # exclude reg_seg_backbone
 
     # Define optimizer
     reg_optimizer = torch.optim.AdamW(reg_params, lr=cfg['lr_start_reg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
@@ -126,51 +128,54 @@ def train(args):
         for i, sample in enumerate(train_loader):
             sample = sample[1]
             vis = sample['vis'].to(device)
-            ir = sample['ir'].to(device)
             ir_pseudo = sample['ir_pseudo'].to(device)
             ir_affine_deform = sample['ir_affine_deform'].to(device)
             label = sample['label'].to(device)
-            warped_moving_ir, rewarped_fixed_ir_pseudo, flow, out = model(ir_affine_deform, ir_pseudo, vis)
 
-            # Update loss
-            # Upper loss
+            # Train reg (Lower Level)
+            warped_moving_ir, rewarped_fixed_ir_pseudo, flow, out = model(ir_affine_deform, ir_pseudo, vis)
             reg_loss, _, _, _ = criterion_reg(warped_moving_ir, rewarped_fixed_ir_pseudo, ir_pseudo, ir_affine_deform, flow)
-            train_loss_meter_reg.update(reg_loss.item())
-            # reg_optimizer.zero_grad()
-            # reg_optimizer.step()
-            # reg_loss.backward()
-            # Lower loss
+            reg_optimizer.zero_grad()
+            reg_loss.backward()
+            reg_optimizer.step()
+
+            # Train seg (Upper Level)
+            warped_moving_ir, rewarped_fixed_ir_pseudo, flow, out = model(ir_affine_deform, ir_pseudo, vis)
+            # Upper loss
             seg_loss_1 = criterion_seg_1(out, label)
             seg_loss_2 = criterion_seg_2(out, label)
-            reg_seg_loss = 0.5 * seg_loss_1 + 0.5 * seg_loss_2
-            # grad_reg = torch.autograd.grad(reg_loss, seg_params, retain_graph=True)
-            # grad_seg = torch.autograd.grad(reg_seg_loss, seg_params, retain_graph=True)
-            # grese = 0
-            # gsese = 0
-            # for rs, ss in zip(grad_reg, grad_seg):
-            #     grese += torch.sum(rs * ss)
-            #     gsese += torch.sum(ss * ss)
-            # gre_loss = - grese.detach() / gsese.detach() * reg_seg_loss
-            # reg_grad = torch.autograd.grad(reg_loss + gre_loss, reg_params)
-            # for p, t in zip(reg_grad, reg_params):
-            #     if t.grad is not None:
-            #         t.grad += p
+            seg_loss = 0.5 * seg_loss_1 + 0.5 * seg_loss_2
+            # Lower loss
+            reg_loss, _, _, _ = criterion_reg(warped_moving_ir, rewarped_fixed_ir_pseudo, ir_pseudo, ir_affine_deform, flow)
+            loss = seg_loss + reg_loss
+            seg_optimizer.zero_grad()
+            Grad_Seg = torch.autograd.grad(loss, reg_params, retain_graph=True)
+            Grad_Reg = torch.autograd.grad(reg_loss, reg_params, retain_graph=True)
+            # seg_params_name = [n for n, p in model.named_parameters() if 'seg_' in n]
+            # for name, grad in zip(seg_params_name, Grad_Reg):
+            #     if grad is not None:
+            #         print(f"{name} is used in reg_loss")
             #     else:
-            #         t.grad = p
-            # reg_optimizer.step()
+            #         print(f"{name} is NOT used in reg_loss")
+            gReSe = 0
+            gSeSe = 0
+            for rs, ss in zip(Grad_Reg, Grad_Seg):
+                gReSe += torch.sum(rs * ss)
+                gSeSe += torch.sum(ss * ss)
+            GRe_loss = - gReSe.detach() / gSeSe.detach() * reg_loss
+            seg_deep_grad = torch.autograd.grad(seg_loss + GRe_loss, seg_params)
+            for p, t in zip(seg_deep_grad, seg_params):
+                if t.grad is not None:
+                    t.grad += p
+                else:
+                    t.grad = p
+            seg_optimizer.step()
+            # Update meters
+            train_loss_meter_reg.update(reg_loss.item())
             train_loss_meter_seg_1.update(seg_loss_1.item())
             train_loss_meter_seg_2.update(seg_loss_2.item())
-            train_loss_meter_seg.update(reg_seg_loss.item())
-
-            loss = reg_loss + reg_seg_loss
+            train_loss_meter_seg.update(seg_loss.item())
             train_loss_meter.update(loss.item())
-
-            # Backpropagation and optimize
-            reg_optimizer.zero_grad()
-            seg_optimizer.zero_grad()
-            loss.backward()
-            reg_optimizer.step()
-            seg_optimizer.step()
 
         # Update lr
         lr_reg = reg_optimizer.param_groups[0]['lr']
@@ -191,15 +196,15 @@ def train(args):
 
                 # Update loss
                 reg_loss, _, _, _ = criterion_reg(warped_moving_ir, rewarped_fixed_ir_pseudo, ir_pseudo, ir_affine_deform, flow)
-                val_loss_meter_reg.update(reg_loss.item())
                 seg_loss_1 = criterion_seg_1(out, label)
                 seg_loss_2 = criterion_seg_2(out, label)
-                reg_seg_loss = 0.5 * seg_loss_1 + 0.5 * seg_loss_2
+                seg_loss = 0.5 * seg_loss_1 + 0.5 * seg_loss_2
+                loss = reg_loss + seg_loss
+
+                val_loss_meter_reg.update(reg_loss.item())
                 val_loss_meter_seg_1.update(seg_loss_1.item())
                 val_loss_meter_seg_2.update(seg_loss_2.item())
-                val_loss_meter_seg.update(reg_seg_loss.item())
-
-                loss = reg_loss + reg_seg_loss
+                val_loss_meter_seg.update(seg_loss.item())
                 val_loss_meter.update(loss.item())
 
                 # Metric Acc and IoU

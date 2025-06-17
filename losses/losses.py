@@ -144,3 +144,28 @@ class LovaszSoftmax(nn.Module):
         logits = F.softmax(output, dim=1)
         loss = lovasz_softmax(probas=logits, labels=target, ignore=self.ignore_index)
         return loss
+
+class MultiScaleFeatsLoss(nn.Module):
+
+    def __init__(self, weights=[1.0 / 32, 1.0 / 16, 1.0 / 8, 1.0 / 4]):
+        super(MultiScaleFeatsLoss, self).__init__()
+        if weights is not None:
+            self.weights = weights
+
+    def L1_loss(self, input_flow, target_flow):
+        L1 = torch.abs(input_flow-target_flow)
+        L1 = torch.sum(L1, 1)
+        return L1
+
+    def one_scale(self, output, target):
+        batch_size = output.size(0)
+        norm = self.L1_loss(output, target)
+        return norm.mean() / batch_size
+
+    def forward(self, output, target):
+        assert (len(self.weights) == len(output) == len(target))
+        loss = 0
+        for output, target, weight in zip(output, target, self.weights):
+            # from smallest size to biggest size (last one is a quarter of input image size
+            loss += weight * self.one_scale(output, target)
+        return loss
