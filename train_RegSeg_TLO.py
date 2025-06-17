@@ -14,7 +14,7 @@ import time
 import numpy as np
 import torch
 import wandb
-from torch import nn, distributed
+from torch import nn
 from torch.utils.data import DataLoader
 
 from losses.losses import LovaszSoftmax, LossFunction_Dense
@@ -79,7 +79,7 @@ def train(args):
     # Optimizers with parameter groups
     reg_params = [p for n, p in model.named_parameters() if 'reg_' in n]
     seg_params = [p for n, p in model.named_parameters() if 'seg_' in n and 'reg_' not in n] # exclude reg_seg_backbone
-    alpha = nn.Parameter(torch.tensor(0.5, requires_grad=True, device=device))
+    alpha = nn.Parameter(torch.tensor(1.0, requires_grad=True, device=device))
 
     # Define optimizer
     reg_optimizer = torch.optim.AdamW(reg_params, lr=cfg['lr_start_reg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
@@ -151,7 +151,7 @@ def train(args):
             reg_loss, _, _, _ = criterion_reg(warped_moving_ir, rewarped_fixed_ir_pseudo, ir_pseudo, ir_affine_deform, flow)
             loss = alpha * seg_loss + (1 - alpha) * reg_loss
             seg_optimizer.zero_grad()
-            Grad_Seg = torch.autograd.grad(loss, reg_params, retain_graph=True, allow_unused=True)
+            Grad_Seg = torch.autograd.grad(loss, reg_params, retain_graph=True)
             Grad_Reg = torch.autograd.grad(reg_loss, reg_params, retain_graph=True)
             # seg_params_name = [n for n, p in model.named_parameters() if 'seg_' in n]
             # for name, grad in zip(seg_params_name, Grad_Reg):
@@ -162,9 +162,8 @@ def train(args):
             gReSe = 0
             gSeSe = 0
             for rs, ss in zip(Grad_Reg, Grad_Seg):
-                if rs is not None:
-                    gReSe += torch.sum(rs * ss)
-                    gSeSe += torch.sum(ss * ss)
+                gReSe += torch.sum(rs * ss)
+                gSeSe += torch.sum(ss * ss)
             GRe_loss = - gReSe.detach() / gSeSe.detach() * reg_loss
             seg_deep_grad = torch.autograd.grad(seg_loss + GRe_loss, seg_params)
             for p, t in zip(seg_deep_grad, seg_params):
@@ -174,7 +173,7 @@ def train(args):
                     t.grad = p
             seg_optimizer.step()
 
-            # Train alpha (Lower Level)
+            # Train alpha (Upper Level)
             warped_moving_ir, rewarped_fixed_ir_pseudo, flow, out = model(ir_affine_deform, ir_pseudo, vis)
             # Upper loss
             seg_loss_1 = criterion_seg_1(out, label)
@@ -186,6 +185,9 @@ def train(args):
             alpha_optimizer.zero_grad()
             loss.backward()
             alpha_optimizer.step()
+            # limit alpha in [0,1]
+            with torch.no_grad():
+                alpha.data.clamp_(0.0, 1.0)
             # Update meters
             train_loss_meter_reg.update(reg_loss.item())
             train_loss_meter_seg_1.update(seg_loss_1.item())
