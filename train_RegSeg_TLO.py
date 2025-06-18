@@ -151,7 +151,7 @@ def train(args):
             reg_loss, _, _, _ = criterion_reg(warped_moving_ir, rewarped_fixed_ir_pseudo, ir_pseudo, ir_affine_deform, flow)
             loss = alpha * seg_loss + (1 - alpha) * reg_loss
             seg_optimizer.zero_grad()
-            Grad_Seg = torch.autograd.grad(loss, reg_params, retain_graph=True)
+            Grad_Seg = torch.autograd.grad(loss, reg_params, retain_graph=True, allow_unused=True)
             Grad_Reg = torch.autograd.grad(reg_loss, reg_params, retain_graph=True)
             # seg_params_name = [n for n, p in model.named_parameters() if 'seg_' in n]
             # for name, grad in zip(seg_params_name, Grad_Reg):
@@ -162,8 +162,9 @@ def train(args):
             gReSe = 0
             gSeSe = 0
             for rs, ss in zip(Grad_Reg, Grad_Seg):
-                gReSe += torch.sum(rs * ss)
-                gSeSe += torch.sum(ss * ss)
+                if rs is not None:
+                    gReSe += torch.sum(rs * ss)
+                    gSeSe += torch.sum(ss * ss)
             GRe_loss = - gReSe.detach() / gSeSe.detach() * reg_loss
             seg_deep_grad = torch.autograd.grad(seg_loss + GRe_loss, seg_params)
             for p, t in zip(seg_deep_grad, seg_params):

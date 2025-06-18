@@ -2,7 +2,7 @@
     "mode": "test",
     "dataset": "FMB",
     "root": "../../dataset/FLIR",
-    "n_classes": 9,
+    "n_classes": 15,
     "class_weight": "enet",
     "height": 576,
     "width": 768,
