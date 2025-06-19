@@ -171,6 +171,7 @@ def train(args):
                 else:
                     t.grad = p
             seg_optimizer.step()
+
             # Update meters
             train_loss_meter_reg.update(reg_loss.item())
             train_loss_meter_seg_1.update(seg_loss_1.item())
