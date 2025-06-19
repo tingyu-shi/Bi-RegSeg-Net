@@ -46,7 +46,7 @@ def train(args):
 
     # Config wandb
     # os.environ['WANDB_DISABLED'] = 'true'  # Disable wandb
-    os.environ["WANDB_MODE"] = "offline"  # Set wandb offline (default: online)
+    # os.environ["WANDB_MODE"] = "offline"  # Set wandb offline (default: online)
     miya = wandb.init(project='train_RegSeg_TLO', config=cfg, resume='allow')
     miya.config.update(dict(logdir=logdir))
 
@@ -189,6 +189,7 @@ def train(args):
             # limit alpha in [0,1]
             with torch.no_grad():
                 alpha.data.clamp_(0.0, 1.0)
+
             # Update meters
             train_loss_meter_reg.update(reg_loss.item())
             train_loss_meter_seg_1.update(seg_loss_1.item())

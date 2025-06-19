@@ -46,7 +46,7 @@ def train(args):
 
     # Config wandb
     # os.environ['WANDB_DISABLED'] = 'true'  # Disable wandb
-    os.environ["WANDB_MODE"] = "offline"  # Set wandb offline (default: online)
+    # os.environ["WANDB_MODE"] = "offline"  # Set wandb offline (default: online)
     miya = wandb.init(project='train_RegSeg_BLO', config=cfg, resume='allow')
     miya.config.update(dict(logdir=logdir))
 
