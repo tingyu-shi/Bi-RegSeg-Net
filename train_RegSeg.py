@@ -45,6 +45,8 @@ def train(args):
     logger.info(f'Conf | use backbone {cfg["backbone"]}')
 
     # Config wandb
+    # os.environ['WANDB_DISABLED'] = 'true'  # Disable wandb
+    # os.environ["WANDB_MODE"] = "offline"  # Set wandb offline (default: online)
     miya = wandb.init(project='train_RegSeg', config=cfg, resume='allow')
     miya.config.update(dict(logdir=logdir))
 
