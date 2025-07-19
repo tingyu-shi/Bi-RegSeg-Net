@@ -76,23 +76,23 @@ def train(args):
         logger.info(f'Load | load pretrained model {cfg["load_ckpt"]}')
         load_ckpt(cfg['load_ckpt'], model, cfg['gpu'])
 
-    # Optimizers with parameter groups
-    reg_params = [p for n, p in model.named_parameters() if 'reg_' in n]
-    seg_params = [p for n, p in model.named_parameters() if 'seg_' in n and 'reg_' not in n] # exclude reg_seg_backbone
-    alpha = nn.Parameter(torch.tensor(1.0, requires_grad=True, device=device))
-
-    # Define optimizer
-    reg_optimizer = torch.optim.AdamW(reg_params, lr=cfg['lr_start_reg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
-    seg_optimizer = torch.optim.AdamW(seg_params, lr=cfg['lr_start_seg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
-    alpha_optimizer = torch.optim.Adam([alpha], lr=cfg.get('lr_alpha', 1e-3))
-
-    # Define lr scheduling
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(seg_optimizer, gamma=cfg['lr_decay'])
-
     # Define loss
     criterion_reg = LossFunction_Dense().to(device)
     criterion_seg_1 = LovaszSoftmax().to(device)
     criterion_seg_2 = SoftCrossEntropyLoss(smooth_factor=0.1).to(device)
+
+    # Optimizers with parameter groups
+    reg_params = [p for n, p in model.named_parameters() if 'reg_' in n]
+    seg_params = [p for n, p in model.named_parameters() if 'seg_' in n and 'reg_' not in n] # exclude reg_seg_backbone
+    gamma = nn.Parameter(torch.tensor(1.0, requires_grad=True, device=device))
+
+    # Define optimizer
+    reg_optimizer = torch.optim.AdamW(reg_params, lr=cfg['lr_start_reg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
+    seg_optimizer = torch.optim.AdamW(seg_params, lr=cfg['lr_start_seg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
+    gamma_optimizer = torch.optim.Adam([gamma], lr=cfg.get('lr_gamma', 1e-3))
+
+    # Define lr scheduling
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(seg_optimizer, gamma=cfg['lr_decay'])
 
     # Define Meters
     train_loss_meter_reg = averageMeter()
@@ -149,7 +149,7 @@ def train(args):
             seg_loss = 0.5 * seg_loss_1 + 0.5 * seg_loss_2
             # Lower loss
             reg_loss, _, _, _ = criterion_reg(warped_moving_ir, rewarped_fixed_ir_pseudo, ir_pseudo, ir_affine_deform, flow)
-            loss = alpha * seg_loss + (1 - alpha) * reg_loss
+            loss = gamma * seg_loss + (1 - gamma) * reg_loss
             seg_optimizer.zero_grad()
             Grad_Seg = torch.autograd.grad(loss, reg_params, retain_graph=True, allow_unused=True)
             Grad_Reg = torch.autograd.grad(reg_loss, reg_params, retain_graph=True)
@@ -174,7 +174,7 @@ def train(args):
                     t.grad = p
             seg_optimizer.step()
 
-            # Train alpha (Upper Level)
+            # Train gamma (Upper Level)
             warped_moving_ir, rewarped_fixed_ir_pseudo, flow, out = model(ir_affine_deform, ir_pseudo, vis)
             # Upper loss
             seg_loss_1 = criterion_seg_1(out, label)
@@ -182,13 +182,13 @@ def train(args):
             seg_loss = 0.5 * seg_loss_1 + 0.5 * seg_loss_2
             # Lower loss
             reg_loss, _, _, _ = criterion_reg(warped_moving_ir, rewarped_fixed_ir_pseudo, ir_pseudo, ir_affine_deform, flow)
-            loss = alpha * seg_loss + (1 - alpha) * reg_loss
-            alpha_optimizer.zero_grad()
+            loss = gamma * seg_loss + (1 - gamma) * reg_loss
+            gamma_optimizer.zero_grad()
             loss.backward()
-            alpha_optimizer.step()
-            # limit alpha in [0,1]
+            gamma_optimizer.step()
+            # limit gamma in [0,1]
             with torch.no_grad():
-                alpha.data.clamp_(0.0, 1.0)
+                gamma.data.clamp_(0.0, 1.0)
 
             # Update meters
             train_loss_meter_reg.update(reg_loss.item())
@@ -200,7 +200,7 @@ def train(args):
         # Update lr
         lr_reg = reg_optimizer.param_groups[0]['lr']
         lr_seg = seg_optimizer.param_groups[0]['lr']
-        lr_alpha = alpha_optimizer.param_groups[0]['lr']
+        lr_gamma = gamma_optimizer.param_groups[0]['lr']
         scheduler.step()
 
         # Val
@@ -258,8 +258,8 @@ def train(args):
 
         # Save logs
         logger.info(
-            f'Epoch | [{ep + 1:3d}/{cfg["epochs"]}] lr_reg={lr_reg:.12f} lr_seg={lr_seg:.12f} lr_alpha={lr_alpha:.12f}, '
-            f'alpha={alpha.item():.4f}, '
+            f'Epoch | [{ep + 1:3d}/{cfg["epochs"]}] lr_reg={lr_reg:.12f} lr_seg={lr_seg:.12f} lr_gamma={lr_gamma:.12f}, '
+            f'gamma={gamma.item():.4f},'
             f'train/val loss={train_loss_meter.avg:.5f}/{val_loss_meter.avg:.5f}, '
             f'train/val reg_loss={train_loss_meter_reg.avg:.5f}/{val_loss_meter_reg.avg:.5f}, '
             f'train/val seg_loss={train_loss_meter_seg.avg:.5f}/{val_loss_meter_seg.avg:.5f}, '
@@ -272,10 +272,10 @@ def train(args):
         # Save wandb
         miya.log({
             'epoch': ep + 1,
-            'alpha': alpha.item(),
+            'gamma': gamma.item(),
             'reg learning rate': lr_reg,
             'seg learning rate': lr_seg,
-            'alpha learning rate': lr_alpha,
+            'gamma learning rate': lr_gamma,
             'train loss': train_loss_meter.avg,
             'val loss': val_loss_meter.avg,
             'train reg_loss': train_loss_meter_reg.avg,

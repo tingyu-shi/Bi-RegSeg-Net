@@ -169,3 +169,14 @@ class MultiScaleFeatsLoss(nn.Module):
             # from smallest size to biggest size (last one is a quarter of input image size
             loss += weight * self.one_scale(output, target)
         return loss
+
+class SoftmaxWeightedLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.logits = nn.Parameter(torch.randn(2))  # 可学习权重参数
+
+    def forward(self, seg_loss, reg_loss):
+        weights = torch.softmax(self.logits, dim=0)  # 保证和为1
+        gamma1, gamma2 = weights[0], weights[1]
+        loss = gamma1 * seg_loss + gamma2 * reg_loss
+        return loss, gamma1, gamma2
