@@ -177,7 +177,7 @@ def train(args):
         if sum(comparison_results) >= 2:
             min_MSE, max_NCC, max_MI, max_PCK = MSE, NCC, MI, PCK
             logger.info(f'Save | save checkpoint {ep + 1}')
-            save_ckpt(cfg['save_ckpt'], logdir.split('/')[-1] + '_epoch_' + f'{ep + 1:03d}' + '_MSE_' + f'{min_MSE:.4f}' + '_NCC_' + f'{max_NCC:.4f}' + '_MI_' + f'{max_MI:.4f}' + '_PCK_' + f'{max_PCK:.4f}', model)
+            save_ckpt(cfg['save_ckpt'], logdir.split('/')[-1] + '_epoch_' + f'{ep + 1:03d}' + '_MSE_' + f'{MSE:.4f}' + '_NCC_' + f'{NCC:.4f}' + '_MI_' + f'{MI:.4f}' + '_PCK_' + f'{PCK:.4f}', model)
 
         # Reset meters
         train_loss_meter_reg.reset()
