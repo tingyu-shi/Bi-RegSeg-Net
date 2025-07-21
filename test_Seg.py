@@ -5,7 +5,7 @@
 # @File: test_Seg.py
 # @Description: test_Seg
 
-import argparse
+
 import json
 import os
 import argparse
@@ -68,8 +68,8 @@ def test(args):
     time_meter = averageMeter()
 
     # Make Dirs
-    os.makedirs(os.path.join(cfg['save_image'], 'reg_flow_disp'), exist_ok=True)
-    os.makedirs(os.path.join(cfg['save_image'], 'reg_flow_image'), exist_ok=True)
+    os.makedirs(os.path.join(cfg['save_image'], 'predict'), exist_ok=True)
+    os.makedirs(os.path.join(cfg['save_image'], 'predict_rgb'), exist_ok=True)
 
     # Test
     with torch.no_grad():
@@ -79,6 +79,8 @@ def test(args):
             sample = sample[1]
             vis = sample['vis'].to(device)
             ir = sample['ir'].to(device)
+            ir_affine_deform = sample['ir_affine_deform'].to(device)
+            ir_pseudo = sample['ir_pseudo'].to(device)
             label = sample['label'].to(device)
 
             # Metric time
