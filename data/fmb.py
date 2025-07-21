@@ -95,7 +95,7 @@ class FMB_Dataset(data.Dataset):
         vis = Image.open(os.path.join(self.root, 'pad', 'vis', image_name + '.png'))
         ir_pseudo = Image.open(os.path.join(self.root, 'pad', 'ir_pseudo_stylebooth', image_name + '.png'))
         ir_pseudo = ir_pseudo.convert('RGB')
-        label = Image.open(os.path.join(self.root, 'ori', 'label', image_name + '.png'))
+        label = Image.open(os.path.join(self.root, 'ori', 'labels', image_name + '.png'))
         ir = Image.open(os.path.join(self.root, 'pad', 'ir', image_name + '.png'))
         ir = ir.convert('RGB')
         ir_affine_deform = Image.open(os.path.join(self.root, 'pad', 'ir_affine_deform', image_name + '.png'))
@@ -118,19 +118,18 @@ class FMB_Dataset(data.Dataset):
     def cmap(self):
         return [
             (0, 0, 0),          # 0  Background
-            (70, 70, 70),       # 1  Road
-            (100, 40, 40),      # 2  Sidewalk
-            (55, 90, 80),       # 3  Building
-            (220, 20, 60),      # 4  Traffic Light
-            (153, 153, 153),    # 5  Traffic Sign
-            (157, 234, 50),     # 6  Vegetation
-            (128, 64, 128),     # 7  Sky
-            (245, 35, 232),     # 8  Person
-            (255, 255, 0),      # 9  Car
-            (102, 102, 156),    # 10 Truck
-            (107, 142, 35),     # 11 Bus
-            (70, 130, 180),     # 12 Motorcycle
-            (81, 0, 81),        # 13 Bicycle
-            (150, 100, 100)     # 14 Pole
+            (179, 228, 228),    # 1  Road
+            (181, 57, 133),     # 2  Sidewalk
+            (67, 162, 177),     # 3  Building
+            (200, 178, 50),     # 4  Traffic Light
+            (132, 45, 199),     # 5  Traffic Sign
+            (66, 172, 84),      # 6  Vegetation
+            (179, 73, 79),      # 7  Sky
+            (76, 99, 166),      # 8  Person
+            (66, 121, 253),     # 9  Car
+            (137, 165, 91),     # 10 Truck
+            (155, 97, 152),     # 11 Bus
+            (105, 153, 140),    # 12 Motorcycle
+            (222, 215, 158),    # 13 Bicycle
+            (135, 113, 90)      # 14 Pole
         ]
-

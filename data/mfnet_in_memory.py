@@ -106,13 +106,13 @@ class MFNet_Dataset_InMemory(data.Dataset):
     @property
     def cmap(self):
         return [
-            (0, 0, 0),        # 0 unlabelled
-            (64, 0, 128),     # 1 car
-            (64, 64, 0),      # 2 person
-            (0, 128, 192),    # 3 bike
-            (0, 0, 192),      # 4 curve
-            (128, 128, 0),    # 5 car_stop
-            (64, 64, 128),    # 6 guardrail
-            (192, 128, 128),  # 7 color_cone
-            (192, 64, 0)      # 8 bump
+            (0, 0, 0),        # 0 Unlabelled
+            (64, 0, 128),     # 1 Car
+            (64, 64, 0),      # 2 Person
+            (0, 128, 192),    # 3 Bike
+            (0, 0, 192),      # 4 Curve
+            (128, 128, 0),    # 5 Car Stop
+            (64, 64, 128),    # 6 Guardrail
+            (192, 128, 128),  # 7 Color Cone
+            (192, 64, 0)      # 8 Bump
         ]
