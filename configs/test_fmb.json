@@ -26,6 +26,7 @@
     "#": "GPU ID number(s), -1 denote CPU (default: 0), e.g., \"0\" and \"-1\"",
     "gpu": "0",
 
+    "#": "./checkpoints/fmb/2025-07-21-19-33-02(FMB-train-Seg)_epoch_006_MSE_0.0000_NCC_0.0000_MI_0.0000_PCK_0.0000_mIoU_0.6027_mAcc_0.7043.pth",
     "#": "the bast checkpoint path",
     "load_ckpt": "./checkpoints/fmb/2025-06-19-16-59-34(FMB-train-RegSeg-TLO)_epoch_017_MSE_0.0012_NCC_0.9847_MI_2.2117_PCK_88.7337_mIoU_0.5722_mAcc_0.6746.pth",
 
