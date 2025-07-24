@@ -350,8 +350,8 @@ class RegSeg(nn.Module):
         vis = self.seg_backbone(vis)
 
         # Segmentation
-        x = self.seg_fusion(vis, ir)
-        out = self.seg_decode_head.forward(x)
+        fet = self.seg_fusion(vis, ir)
+        out = self.seg_decode_head.forward(fet)
         out = F.interpolate(out, size=self.orisize, mode='bilinear', align_corners=False)
 
         return warped_x, rewarped_y, flowall, out
@@ -419,8 +419,8 @@ class Seg(nn.Module):
         vis = self.reg_seg_backbone(vis)
 
         # Segmentation
-        x = self.seg_fusion(vis, ir)
-        out = self.seg_decode_head.forward(x)
+        fet = self.seg_fusion(vis, ir)
+        out = self.seg_decode_head.forward(fet)
         out = F.interpolate(out, size=self.orisize, mode='bilinear', align_corners=False)
 
         return out
