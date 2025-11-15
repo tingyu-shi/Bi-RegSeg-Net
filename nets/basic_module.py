@@ -17,7 +17,7 @@ class SpatialTransformer(nn.Module):
         super().__init__()
 
         self.mode = mode
-        # print('size', size)
+        self.size = size
 
         # create sampling grid
         vectors = [torch.arange(0, s) for s in size]

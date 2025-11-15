@@ -294,6 +294,9 @@ class RegSeg(nn.Module):
         fx1, fx2, fx3, fx4 = self.reg_seg_backbone(x)
         fy1, fy2, fy3, fy4 = self.reg_seg_backbone(y)
 
+        # # === NEW: cache native first-scale features BEFORE any view ===
+        # fx1_native, fx2_native, fx3_native, fx4_native = fx1, fx2, fx3, fx4  # [B, C1, Hf, Wf]
+
         # Registration
         # range a
         B, C, H, W = fx4.shape
@@ -353,6 +356,33 @@ class RegSeg(nn.Module):
         fet = self.seg_fusion(vis, ir)
         out = self.seg_decode_head.forward(fet)
         out = F.interpolate(out, size=self.orisize, mode='bilinear', align_corners=False)
+
+        # # === NEW: warp first-scale native features with matched transformer and resized flow ===
+        # # pick transformer whose grid matches fx1_native spatial size
+        # Hf, Wf = fx1_native.shape[-2], fx1_native.shape[-1]
+        # # find i such that [height // 2**i, width // 2**i] == (Hf, Wf)
+        # # assuming cfg is available in class, otherwise compute i from current transformer sizes
+        # tgt_idx = None
+        # for i in range(4):
+        #     H_i, W_i = self.reg_transformer[i].size  # assuming SpatialTransformer(size=[H_i,W_i]) stores 'size'
+        #     if H_i == Hf and W_i == Wf:
+        #         tgt_idx = i
+        #         break
+        # if tgt_idx is None:
+        #     # fallback: choose the transformer whose size is closest to fx1_native
+        #     sizes = [self.reg_transformer[i].size for i in range(4)]
+        #     diffs = [abs(s[0] - Hf) + abs(s[1] - Wf) for s in sizes]
+        #     tgt_idx = int(diffs.index(min(diffs)))
+        # # resize flow to feature resolution and scale magnitude
+        # Hi, Wi = x.shape[-2], x.shape[-1]
+        # flow_feat = F.interpolate(flowall, size=(Hf, Wf), mode='bilinear', align_corners=True)
+        # scale_x = Wf / float(Wi)
+        # scale_y = Hf / float(Hi)
+        # flow_feat[:, 0] = flow_feat[:, 0] * scale_x
+        # flow_feat[:, 1] = flow_feat[:, 1] * scale_y
+        # warped_fx1_out = self.reg_transformer[tgt_idx](fx1_native, flow_feat)
+        # fx1_out = fx1_native
+        # return warped_x, rewarped_y, flowall, out, fx1_out, warped_fx1_out
 
         return warped_x, rewarped_y, flowall, out
 
@@ -437,8 +467,18 @@ if __name__ == '__main__':
     ir_affine_deform = torch.randn(num_minibatch, 3, 576, 768).cuda()
     ir_pseudo = torch.randn(num_minibatch, 3, 576, 768).cuda()
     vis = torch.randn(num_minibatch, 3, 576, 768).cuda()
-    model = RegSeg(cfg).cuda(0)
-    for n, p in model.named_parameters():
-        print(n)
-    warped_moving_ir, rewarped_fixed_ir_pseudo, flow, set_out = model(ir_affine_deform, ir_pseudo, vis)
-    print('end')
+    model1 = RegSeg(cfg).cuda(0)
+    # for n, p in model.named_parameters():
+    #     print(n)
+    # warped_moving_ir, rewarped_fixed_ir_pseudo, flow, set_out = model(ir_affine_deform, ir_pseudo, vis)
+    # print('end')
+
+    from copy import deepcopy
+    model2 = deepcopy(model1)
+    from thop import profile, clever_format
+    macs, params = profile(model1, inputs=(ir_affine_deform, ir_pseudo, vis))
+    macs, params = clever_format([macs, params], "%.3f")
+    print('thop ------- MACs: ', macs, 'Params: ', params)
+    from calflops import calculate_flops
+    flops, macs, params = calculate_flops(model2, args=[ir_affine_deform, ir_pseudo, vis], print_detailed=False, output_precision=4)
+    print("calflops ------- FLOPs:%s   MACs:%s   Params:%s \n" % (flops, macs, params))

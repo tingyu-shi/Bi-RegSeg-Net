@@ -90,7 +90,7 @@ def train(args):
     # Define optimizer
     reg_optimizer = torch.optim.AdamW(reg_params, lr=cfg['lr_start_reg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
     seg_optimizer = torch.optim.AdamW(seg_params, lr=cfg['lr_start_seg'], betas=(0.9, 0.999), weight_decay=cfg['weight_decay'])
-    gamma_optimizer = torch.optim.Adam(gamma, lr=cfg.get('lr_gamma', 1e-3))
+    gamma_optimizer = torch.optim.Adam(gamma, lr=cfg.get('lr_gamma', 1e-5))
 
     # Define lr scheduling
     scheduler = torch.optim.lr_scheduler.ExponentialLR(seg_optimizer, gamma=cfg['lr_decay'])

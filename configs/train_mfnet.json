@@ -19,10 +19,11 @@
     "crop_rate": 0.1,
     "crop_prob": 1.0,
 
+    "#": "./checkpoints/mfnet/2025-05-13-11-38-04(MFNet-train-Reg)_epoch_484_MSE_0.0004_NCC_0.9884_MI_1.6920_PCK_93.0343.pth",
     "#": "save path for checkpoint",
     "save_ckpt": "./checkpoints/mfnet",
     "#": "load path for checkpoint",
-    "load_ckpt": "./checkpoints/mfnet/2025-05-13-11-38-04(MFNet-train-Reg)_epoch_484_MSE_0.0004_NCC_0.9884_MI_1.6920_PCK_93.0343.pth",
+    "load_ckpt": "./checkpoints/mfnet/2025-05-13-11-38-04(MFNet-train-Reg)_epoch_141_MSE_0.0032_NCC_0.9165_MI_1.2808_PCK_83.6047.pth",
 
     "#": "dataset resides in memory",
     "in_memory": false,

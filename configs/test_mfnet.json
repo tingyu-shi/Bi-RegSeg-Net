@@ -27,8 +27,9 @@
     "gpu": "0",
 
     "#": "./checkpoints/mfnet/2025-05-25-15-23-56(MFNet-train-Seg)_epoch_035_MSE_1.0000_NCC_0.9997_MI_3.2605_PCK_100.0000_mIoU_0.5977_mAcc_0.7251.pth",
+    "#": "./checkpoints/mfnet/2025-06-27-10-08-49(MFNet-train-RegSeg-TLO)_epoch_391_MSE_0.0004_NCC_0.9896_MI_1.6950_PCK_93.0685_mIoU_0.5646_mAcc_0.6733.pth",
     "#": "the bast checkpoint path",
-    "load_ckpt": "./checkpoints/mfnet/2025-06-27-10-08-49(MFNet-train-RegSeg-TLO)_epoch_391_MSE_0.0004_NCC_0.9896_MI_1.6950_PCK_93.0685_mIoU_0.5646_mAcc_0.6733.pth",
+    "load_ckpt": "./checkpoints/mfnet/2025-06-27-10-08-49(MFNet-train-RegSeg-TLO)_epoch_045_MSE_0.0004_NCC_0.9869_MI_1.6638_PCK_92.6044_mIoU_0.5755_mAcc_0.7039.pth",
 
     "#": "save predict image",
     "save_image": "./results/mfnet"
