@@ -126,6 +126,7 @@ class ElasticTransform(nn.Module):
 def imread(path, flags=cv2.IMREAD_GRAYSCALE):
     im_cv = cv2.imread(path, flags)
     assert im_cv is not None, f"Image {str(path)} is invalid."
+    im_cv = cv2.resize(im_cv, (640, 480))
     im_ts = kornia.utils.image_to_tensor(im_cv / 255.).type(torch.FloatTensor)
     return im_ts
 
@@ -145,7 +146,7 @@ def imfuse(img1, img2):
 
 def get_random_affine_coeff():
     # define transformation coefficent
-    degree = random.uniform(0, 10) # light_defo: (0, 0); middle_defo: (0, 5); heavy_defo: (0, 10)
+    degree = random.uniform(0, 15) # light_defo: (0, 0); middle_defo: (0, 5); heavy_defo: (0, 10)
     translate = random.uniform(0.02, 0.05) # light_defo: (0.0, 0.01); middle_defo: (0.0, 0.02); heavy_defo: (0.02, 0.05)
     scale = random.uniform(1.0, 1.0)
     shear = None
@@ -159,23 +160,33 @@ def get_random_deformable_coeff():
 
 if __name__ == "__main__":
     # data path
-    ir_path = '../../dataset/MFNet/val_ir'
+    ir_path = '../../dataset/MRSR/RGB_SAR/test/sar'
     ir_folder = pathlib.Path(ir_path)
     ir_list = [x for x in sorted(ir_folder.glob('*')) if x.suffix in ['.png', '.jpg', '.bmp']]
 
     # save path
-    ir_pad_path = '../../dataset/MFNet/pad/ir'
-    ir_affine_deform_path   = '../../dataset/MFNet/pad/ir_affine_deform'
-    disp_affine_deform_path = './results/mfnet/disp'
-    ir_affine_deform_unpad_path = '../../dataset/MFNet/pad/ir_affine_deform_unpad'
+    ir_pad_path = '../../dataset/MRSR/RGB_SAR/test/sar_pad'
+    ir_affine_deform_path   = '../../dataset/MRSR/RGB_SAR/test/sar_pad_affine_deform'
+    disp_affine_deform_path = '../../dataset/MRSR/RGB_SAR/test/sar_pad_affine_deform_disp'
+    ir_affine_deform_unpad_path = '../../dataset/MRSR/RGB_SAR/test/sar_pad_affine_deform_unpad'
+    ir_affine_path = '../../dataset/MRSR/RGB_SAR/test/sar_pad_affine'
+    disp_affine_path = '../../dataset/MRSR/RGB_SAR/test/sar_pad_affine_disp'
+    ir_affine_unpad_path = '../../dataset/MRSR/RGB_SAR/test/sar_pad_affine_unpad'
 
+    if not os.path.exists(ir_pad_path):
+        os.makedirs(ir_pad_path)
     if not os.path.exists(ir_affine_deform_path):
         os.makedirs(ir_affine_deform_path)
     if not os.path.exists(disp_affine_deform_path):
         os.makedirs(disp_affine_deform_path)
     if not os.path.exists(ir_affine_deform_unpad_path):
         os.makedirs(ir_affine_deform_unpad_path)
-
+    if not os.path.exists(ir_affine_path):
+        os.makedirs(ir_affine_path)
+    if not os.path.exists(disp_affine_path):
+        os.makedirs(disp_affine_path)
+    if not os.path.exists(ir_affine_unpad_path):
+        os.makedirs(ir_affine_unpad_path)
 
     for idx, ir_file in enumerate(ir_list):
         name, ext = os.path.splitext(os.path.basename(ir_file))
@@ -192,17 +203,30 @@ if __name__ == "__main__":
         pad = nn.ZeroPad2d(padding=(64, 64, 48, 48))
         unpad = nn.ZeroPad2d(padding=(-64, -64, -48, -48))
         ir = pad(ir)
-        # imsave(ir, ir_affine_deform_name)
+        ir_pad_name = os.path.join(ir_pad_path, filename)
+        imsave(ir, ir_pad_name)
 
         # ir_affine, affine_disp = affine(ir.unsqueeze(0))
         # ir_elastic, elastic_disp = elastic(ir_affine)
         # disp = affine_disp + elastic_disp
         # ir_warp = ir_elastic
 
-        ir_elastic, elastic_disp = elastic(ir.unsqueeze(0))
-        ir_affine, affine_disp = affine(ir_elastic)
+        ir_affine, affine_disp = affine(ir.unsqueeze(0))
+        ir_affine_name = os.path.join(ir_affine_path, filename)
+        imsave(ir_affine, ir_affine_name)
+
+        affine_disp_1 = affine_disp.permute(0, 3, 1, 2)
+        affine_disp_npy = affine_disp_1.data.cpu().numpy()
+        affine_disp_name = os.path.join(disp_affine_path, name_disp)
+        np.save(affine_disp_name, affine_disp_npy)
+        ir_affine_unpad = unpad(ir_affine)
+        ir_affine_unpad_name = os.path.join(ir_affine_unpad_path, filename)
+        imsave(ir_affine_unpad, ir_affine_unpad_name)
+
+
+        ir_elastic, elastic_disp = elastic(ir_affine)
         disp = affine_disp + elastic_disp
-        ir_affine_deform = ir_affine
+        ir_affine_deform = ir_elastic
         ir_affine_deform_name = os.path.join(ir_affine_deform_path, filename)
         imsave(ir_affine_deform, ir_affine_deform_name)
 
