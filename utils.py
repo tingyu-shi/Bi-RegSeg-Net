@@ -18,8 +18,10 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from data.fmb import FMB_Dataset
+from data.fmb_flir import FMB_FLIR_Dataset
 from data.fmb_in_memory import FMB_Dataset_InMemory
 from data.mfnet import MFNet_Dataset
+from data.mfnet_flir import MFNet_FLIR_Dataset
 from data.mfnet_in_memory import MFNet_Dataset_InMemory
 
 
@@ -317,6 +319,10 @@ def get_test_dataset(cfg):
             return PST900_Dataset_InMemory(cfg, mode='test', do_aug=False)
         elif cfg['dataset'] == 'FMB':
             return FMB_Dataset_InMemory(cfg, mode='test', do_aug=False)
+        elif cfg['dataset'] == 'MFNet_FLIR':
+            return MFNet_FLIR_Dataset_InMemory(cfg, mode='test', do_aug=False)
+        elif cfg['dataset'] == 'FMB_FLIR':
+            return FMB_FLIR_Dataset_InMemory(cfg, mode='test', do_aug=False)
         else:
             raise Exception("Unknown dataset...")
     else:
@@ -326,6 +332,10 @@ def get_test_dataset(cfg):
             return PST900_Dataset(cfg, mode='test', do_aug=False)
         elif cfg['dataset'] == 'FMB':
             return FMB_Dataset(cfg, mode='test', do_aug=False)
+        elif cfg['dataset'] == 'MFNet_FLIR':
+            return MFNet_FLIR_Dataset(cfg, mode='test', do_aug=False)
+        elif cfg['dataset'] == 'FMB_FLIR':
+            return FMB_FLIR_Dataset(cfg, mode='test', do_aug=False)
         else:
             raise Exception("Unknown dataset...")
 
