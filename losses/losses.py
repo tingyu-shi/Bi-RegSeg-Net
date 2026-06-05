@@ -180,3 +180,21 @@ class SoftmaxWeightedLoss(nn.Module):
         gamma1, gamma2 = weights[0], weights[1]
         loss = gamma1 * seg_loss + gamma2 * reg_loss
         return loss, gamma1, gamma2
+
+
+class UncertaintyWeightedLoss(nn.Module):
+    """
+    Multi-task uncertainty weighting (Kendall et al., 2018).
+    loss = exp(-s_s) * seg_loss + exp(-s_r) * reg_loss + 0.5 * (s_s + s_r)
+    where s = log(sigma^2) is learnable.
+    """
+    def __init__(self):
+        super().__init__()
+        self.log_sigma_s = nn.Parameter(torch.zeros(1))  # log(sigma_s^2)
+        self.log_sigma_r = nn.Parameter(torch.zeros(1))  # log(sigma_r^2)
+
+    def forward(self, seg_loss, reg_loss):
+        gamma1 = torch.exp(-self.log_sigma_s)
+        gamma2 = torch.exp(-self.log_sigma_r)
+        loss = gamma1 * seg_loss + gamma2 * reg_loss + 0.5 * (self.log_sigma_s + self.log_sigma_r)
+        return loss, gamma1, gamma2
